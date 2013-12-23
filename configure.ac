@@ -11,10 +11,15 @@ AM_INIT_AUTOMAKE([dist-bzip2 dist-xz])
 AC_PROG_CC
 AM_PROG_CC_C_O
 
+LT_PREREQ([2.2.6])
+LT_INIT([disable-static])
+
 # Check for libraries
 XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.10.0])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 plugins/Makefile
+                 plugins/cpu/Makefile
                 ])
 AC_OUTPUT

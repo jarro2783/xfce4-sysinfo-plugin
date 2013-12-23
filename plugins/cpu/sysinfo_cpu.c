@@ -1,0 +1,4 @@
+void
+sysinfo_init()
+{
+}

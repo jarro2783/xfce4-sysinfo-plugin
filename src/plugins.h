@@ -1,4 +1,5 @@
-/* xfce4-sysinfo-plugin
+/* plugins header
+
    Copyright (C) 2013 Jarryd Beck
 
 This file is part of xfce4-sysinfo-plugin.
@@ -15,16 +16,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
-<http://www.gnu.org/licenses/>.  */
+<http://www.gnu.org/licenses/>.  
 
-#include <libxfce4panel/xfce-panel-plugin.h>
+*/
 
-#include "plugins.h"
-
-static void
-sysinfo_init(XfcePanelPlugin* plugin)
+typedef struct
 {
-  load_sysinfo_plugins();
-}
+} SysinfoPlugin;
 
-XFCE_PANEL_PLUGIN_REGISTER(sysinfo_init);
+void
+load_sysinfo_plugins();
