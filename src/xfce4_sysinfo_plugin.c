@@ -17,8 +17,11 @@ You should have received a copy of the GNU General Public License
 along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-int
-main(int argc, char* argv[])
+#include <libxfce4panel/xfce-panel-plugin.h>
+
+static void
+sysinfo_init(XfcePanelPlugin* plugin)
 {
-  return 0;
 }
+
+XFCE_PANEL_PLUGIN_REGISTER_EXTERNAL(sysinfo_init);

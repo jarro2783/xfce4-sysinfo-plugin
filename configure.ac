@@ -3,20 +3,16 @@
 
 AC_PREREQ([2.69])
 AC_INIT([xfce4-sysinfo-plugin], [0.1], [jarro.2783@gmail.com])
-AC_CONFIG_SRCDIR([src/xfce4_sysinfo_plugin.cpp])
+AC_CONFIG_SRCDIR([src/xfce4_sysinfo_plugin.c])
 
 AM_INIT_AUTOMAKE([dist-bzip2 dist-xz])
 
 # Checks for programs.
-AC_PROG_CXX
+AC_PROG_CC
+AM_PROG_CC_C_O
 
-# Checks for libraries.
-
-# Checks for header files.
-
-# Checks for typedefs, structures, and compiler characteristics.
-
-# Checks for library functions.
+# Check for libraries
+XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.10.0])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
