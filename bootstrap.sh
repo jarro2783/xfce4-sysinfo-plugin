@@ -1,5 +1,5 @@
 #!/bin/bash
 
 aclocal
-automake --force --copy --install-missing
+automake --force --copy --add-missing
 autoconf
