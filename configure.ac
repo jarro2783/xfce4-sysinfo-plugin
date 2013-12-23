@@ -5,6 +5,8 @@ AC_PREREQ([2.69])
 AC_INIT([xfce4-sysinfo-plugin], [0.1], [jarro.2783@gmail.com])
 AC_CONFIG_SRCDIR([src/xfce4_sysinfo_plugin.cpp])
 
+AM_INIT_AUTOMAKE([dist-bzip2 dist-xz])
+
 # Checks for programs.
 AC_PROG_CXX
 
