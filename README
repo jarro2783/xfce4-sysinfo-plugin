@@ -1,8 +1,13 @@
 xfce4-sysinfo-plugin
 ====================
 
-XFCE Extendable System Info Plugin
+XFCE Extensible System Info Plugin
 
 
 IMPORTANT - 23/12/2013: This is a work in progress. It is currently in 
 development, and is probably not either working or reliable.
+
+xfce4-sysinfo-plugin is a plugin for displaying system information in the
+xfce panel. It can display any data as a graph, as long as there is a plugin
+that can provide that data. Data could include CPU utilisation, memory
+usage and network traffic.
