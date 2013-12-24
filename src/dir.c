@@ -24,6 +24,8 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include <glib/gstdio.h>
 
+#include "xfce4-sysinfo-plugin/dir.h"
+
 #define PLUGIN_NAMES_SIZE 10
 
 gchar** 

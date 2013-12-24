@@ -22,9 +22,10 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include <string.h>
 #include <ltdl.h>
+#include <glib/gprintf.h>
 
-#include "plugins.h"
-#include "dir.h"
+#include "xfce4-sysinfo-plugin/plugins.h"
+#include "xfce4-sysinfo-plugin/dir.h"
 
 #define LIST_SIZE_INIT 5
 #define LIST_SIZE_REALLOC 2
@@ -56,7 +57,7 @@ sysinfo_pluginlist_new()
 //If that works, we load it. The way we test if it is a library is that it
 //cannot start with '.', and it must end in '.so'
 SysinfoPluginList*
-sysinfo_load_plugins(SysinfoInstance* sysinfo)
+sysinfo_load_plugins()
 {
   lt_dlsetsearchpath(SYSINFO_PLUGIN_DIR);
 
@@ -95,7 +96,9 @@ sysinfo_tryload_plugin(const char* file)
   //the internal code does this, but if users want to write code
   //to open up individual plugins, they must must set the libtool search path
 
-  lt_dlhandle so = lt_dlopen(file);
+  lt_dlhandle dl = lt_dlopen(file);
+
+  void* init = lt_dlsym(dl, "sysinfo_data_plugin_init");
 }
 
 SysinfoPlugin*

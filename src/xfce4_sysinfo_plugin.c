@@ -18,7 +18,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
 #include "xfce4_sysinfo_plugin.h"
-#include "plugins.h"
+#include "xfce4-sysinfo-plugin/plugins.h"
 
 #include <glibtop.h>
 
