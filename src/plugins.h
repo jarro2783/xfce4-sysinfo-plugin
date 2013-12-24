@@ -23,11 +23,18 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #ifndef SYSINFO_PLUGIN_PLUGINS_H
 #define SYSINFO_PLUGIN_PLUGINS_H
 
-typedef struct
-{
-} SysinfoPlugin;
+#include "xfce4_sysinfo_plugin.h"
 
-void
-load_sysinfo_plugins();
+typedef struct sysinfoplugin SysinfoPlugin;
+typedef struct sysinfopluginlist SysinfoPluginList;
+
+SysinfoPluginList*
+sysinfo_load_plugins(SysinfoInstance* sysinfo);
+
+SysinfoPluginList*
+sysinfo_pluginlist_new();
+
+SysinfoPlugin*
+sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i);
 
 #endif

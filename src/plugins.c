@@ -22,7 +22,47 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include "plugins.h"
 
-void
-load_sysinfo_plugins()
+#define LIST_SIZE_INIT 5
+#define LIST_SIZE_REALLOC 2
+
+struct sysinfoplugin
 {
+};
+
+struct sysinfopluginlist
+{
+  SysinfoPlugin** plugins;
+  size_t capacity;
+  size_t num_plugins;
+};
+
+SysinfoPluginList*
+sysinfo_pluginlist_new()
+{
+  SysinfoPluginList* list = g_new(SysinfoPluginList, 1);
+  list->plugins = g_new0(SysinfoPlugin*, LIST_SIZE_INIT);
+  list->capacity = LIST_SIZE_INIT;
+  list->num_plugins = 0;
+
+  return list;
+}
+
+SysinfoPluginList*
+sysinfo_load_plugins(SysinfoInstance* sysinfo)
+{
+  SysinfoPluginList* list = sysinfo_pluginlist_new();
+}
+
+SysinfoPlugin*
+sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i)
+{
+  if (list->num_plugins <= i)
+  {
+    g_error(
+      "Requested plugin, %zu, "
+      "is greater than the number of available plugins, %zu", 
+      i, list->num_plugins);
+  }
+
+  return list->plugins[i];
 }

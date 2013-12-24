@@ -20,6 +20,8 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #ifndef XFCE4_SYSINFO_PLUGIN_H
 #define XFCE4_SYSINFO_PLUGIN_H
 
+#include <libxfce4panel/xfce-panel-plugin.h>
+
 typedef struct
 {
   XfcePanelPlugin* plugin;
