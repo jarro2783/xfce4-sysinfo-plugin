@@ -1,5 +1,4 @@
-/* plugins header
-
+/* xfce4-sysinfo-plugin library
    Copyright (C) 2013 Jarryd Beck
 
 This file is part of xfce4-sysinfo-plugin.
@@ -16,33 +15,26 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
-<http://www.gnu.org/licenses/>.  
+<http://www.gnu.org/licenses/>.  */
 
-*/
+#include "xfce4-sysinfo-plugin/xfce4_sysinfo_plugin.h"
 
-#ifndef SYSINFO_PLUGIN_PLUGINS_H
-#define SYSINFO_PLUGIN_PLUGINS_H
-
-#include <stddef.h>
-
-#define SYSINFO_PLUGIN_DIR PLUGIN_DIR "/sysinfo"
-
-typedef struct sysinfoplugin SysinfoPlugin;
-typedef struct sysinfopluginlist SysinfoPluginList;
-
-SysinfoPluginList*
-sysinfo_load_plugins();
-
-SysinfoPlugin*
-sysinfo_tryload_plugin(const char* file);
-
-SysinfoPluginList*
-sysinfo_pluginlist_new();
-
-SysinfoPlugin*
-sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i);
+#include <glibtop.h>
+#include <ltdl.h>
 
 void
-sysinfo_pluginlist_append(SysinfoPluginList* list, SysinfoPlugin* plugin);
+sysinfo_initialise()
+{
+  static int started = 0;
 
-#endif
+  if (started == 0)
+  {
+    //initialise a glibtop for everyone
+    glibtop_init();
+
+    //start libtool
+    lt_dlinit();
+
+    started = 1;
+  }
+}

@@ -17,6 +17,7 @@ libxfce4_sysinfo_plugin_la_LDFLAGS = \
         -export-symbols-regex '^xfce_panel_module_(preinit|init|construct)' 
 
 libxfce4_sysinfo_plugin_la_SOURCES = \
-        xfce4_sysinfo_plugin.c \
+        sysinfo.c \
+        libsysinfo.c \
         plugins.c \
         dir.c

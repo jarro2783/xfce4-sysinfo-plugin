@@ -98,7 +98,17 @@ sysinfo_tryload_plugin(const char* file)
 
   lt_dlhandle dl = lt_dlopen(file);
 
+  if (dl == 0)
+  {
+    return 0;
+  }
+
   void* init = lt_dlsym(dl, "sysinfo_data_plugin_init");
+
+  if (init == 0)
+  {
+    return 0;
+  }
 }
 
 SysinfoPlugin*
