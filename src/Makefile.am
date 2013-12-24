@@ -16,4 +16,5 @@ libxfce4_sysinfo_plugin_la_LDFLAGS = \
 
 libxfce4_sysinfo_plugin_la_SOURCES = \
         xfce4_sysinfo_plugin.c \
-        plugins.c
+        plugins.c \
+        dir.c

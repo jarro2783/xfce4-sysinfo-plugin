@@ -21,6 +21,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 */
 
 #include "plugins.h"
+#include "dir.h"
 
 #define LIST_SIZE_INIT 5
 #define LIST_SIZE_REALLOC 2
@@ -51,6 +52,8 @@ SysinfoPluginList*
 sysinfo_load_plugins(SysinfoInstance* sysinfo)
 {
   SysinfoPluginList* list = sysinfo_pluginlist_new();
+
+  char** files = sysinfo_dir_get_plugins(SYSINFO_PLUGIN_DIR);
 }
 
 SysinfoPlugin*

@@ -1,4 +1,4 @@
-/* plugins header
+/* directory utilities
 
    Copyright (C) 2013 Jarryd Beck
 
@@ -20,26 +20,10 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 */
 
-#ifndef SYSINFO_PLUGIN_PLUGINS_H
-#define SYSINFO_PLUGIN_PLUGINS_H
+#ifndef SYSINFO_PLUGIN_DIR_H
+#define SYSINFO_PLUGIN_DIR_H
 
-#include "xfce4_sysinfo_plugin.h"
-
-#define SYSINFO_PLUGIN_DIR "/usr/lib/xfce4/panel/plugins/sysinfo"
-
-typedef struct sysinfoplugin SysinfoPlugin;
-typedef struct sysinfopluginlist SysinfoPluginList;
-
-SysinfoPluginList*
-sysinfo_load_plugins(SysinfoInstance* sysinfo);
-
-SysinfoPluginList*
-sysinfo_pluginlist_new();
-
-SysinfoPlugin*
-sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i);
-
-void
-sysinfo_pluginlist_append(SysinfoPluginList* list, SysinfoPlugin* plugin);
+char** 
+sysinfo_dir_get_plugins(const char* dir);
 
 #endif
