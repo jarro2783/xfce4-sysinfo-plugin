@@ -20,9 +20,15 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #include "xfce4_sysinfo_plugin.h"
 #include "plugins.h"
 
+#include <glibtop.h>
+
 static SysinfoInstance*
 sysinfo_construct(XfcePanelPlugin* plugin)
 {
+  //initialise a glibtop for everyone
+
+  glibtop_init();
+
   SysinfoInstance* sysinfo;
 
   sysinfo = g_slice_new0(SysinfoInstance);
@@ -36,6 +42,8 @@ static void
 sysinfo_free(SysinfoInstance* sysinfo)
 {
   g_slice_free(SysinfoInstance, sysinfo);
+
+  glibtop_close();
 }
 
 static void

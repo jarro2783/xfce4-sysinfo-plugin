@@ -2,7 +2,9 @@ plugindir = $(libexecdir)/xfce4/panel-plugins
 
 plugin_LTLIBRARIES = libxfce4-sysinfo-plugin.la
 
-libxfce4_sysinfo_plugin_la_CFLAGS = $(LIBXFCE4PANEL_CFLAGS)
+libxfce4_sysinfo_plugin_la_CFLAGS = \
+        $(LIBXFCE4PANEL_CFLAGS) \
+        $(LIBGTOP_CFLAGS)
 
 libxfce4_sysinfo_plugin_la_LIBADD = $(LIBXFCE4PANEL_LIBS)
 
