@@ -66,3 +66,17 @@ sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i)
 
   return list->plugins[i];
 }
+
+void
+sysinfo_pluginlist_append(SysinfoPluginList* list, SysinfoPlugin* plugin)
+{
+  if (list->capacity == list->num_plugins)
+  {
+    list->plugins = g_renew(SysinfoPlugin*, list->plugins, 
+      list->capacity * LIST_SIZE_REALLOC);
+    list->capacity *= LIST_SIZE_REALLOC;
+  }
+
+  list->plugins[list->num_plugins] = plugin;
+  ++list->num_plugins;
+}

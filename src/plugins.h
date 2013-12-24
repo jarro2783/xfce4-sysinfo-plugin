@@ -37,4 +37,7 @@ sysinfo_pluginlist_new();
 SysinfoPlugin*
 sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i);
 
+void
+sysinfo_pluginlist_append(SysinfoPluginList* list, SysinfoPlugin* plugin);
+
 #endif
