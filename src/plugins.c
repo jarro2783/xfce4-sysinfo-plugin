@@ -20,6 +20,9 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 */
 
+#include <string.h>
+#include <ltdl.h>
+
 #include "plugins.h"
 #include "dir.h"
 
@@ -48,12 +51,51 @@ sysinfo_pluginlist_new()
   return list;
 }
 
+//The way this work is that we first get a list of all the files in the
+//plugins directory. Then, if it looks like a library, we try to open it.
+//If that works, we load it. The way we test if it is a library is that it
+//cannot start with '.', and it must end in '.so'
 SysinfoPluginList*
 sysinfo_load_plugins(SysinfoInstance* sysinfo)
 {
+  lt_dlsetsearchpath(SYSINFO_PLUGIN_DIR);
+
   SysinfoPluginList* list = sysinfo_pluginlist_new();
 
-  char** files = sysinfo_dir_get_plugins(SYSINFO_PLUGIN_DIR);
+  gchar** files = sysinfo_dir_get_plugins(SYSINFO_PLUGIN_DIR);
+
+  size_t current = 0;
+  while (files[current] != 0)
+  {
+    size_t len = strlen(files[current]);
+
+    if (strcmp(".la", files[current] + (len - 3)) == 0)
+    {
+      //it looks like a library so try to open it
+      SysinfoPlugin* plugin = sysinfo_tryload_plugin(files[current]);
+
+      if (plugin != 0)
+      {
+        sysinfo_pluginlist_append(list, plugin);
+      }
+    }
+
+    g_free(files[current]);
+
+    ++current;
+  }
+
+  return list;
+}
+
+SysinfoPlugin*
+sysinfo_tryload_plugin(const char* file)
+{
+  //use lt_dlopen, which relies on the libtool search path to be set
+  //the internal code does this, but if users want to write code
+  //to open up individual plugins, they must must set the libtool search path
+
+  lt_dlhandle so = lt_dlopen(file);
 }
 
 SysinfoPlugin*

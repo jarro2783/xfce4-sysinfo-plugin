@@ -23,7 +23,9 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #ifndef SYSINFO_PLUGIN_DIR_H
 #define SYSINFO_PLUGIN_DIR_H
 
-char** 
+//both the pointers to each string and the array of pointers should be freed
+//with g_free
+gchar** 
 sysinfo_dir_get_plugins(const char* dir);
 
 #endif
