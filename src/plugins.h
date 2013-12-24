@@ -20,9 +20,14 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 */
 
+#ifndef SYSINFO_PLUGIN_PLUGINS_H
+#define SYSINFO_PLUGIN_PLUGINS_H
+
 typedef struct
 {
 } SysinfoPlugin;
 
 void
 load_sysinfo_plugins();
+
+#endif

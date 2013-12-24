@@ -17,20 +17,12 @@ You should have received a copy of the GNU General Public License
 along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 <http://www.gnu.org/licenses/>.  */
 
-#include <libxfce4panel/xfce-panel-plugin.h>
+#ifndef XFCE4_SYSINFO_PLUGIN_H
+#define XFCE4_SYSINFO_PLUGIN_H
 
-#include "xfce4_sysinfo_plugin.h"
-#include "plugins.h"
-
-static void
-sysinfo_construct(XfcePanelPlugin* plugin)
+typedef struct
 {
-}
+  XfcePanelPlugin* plugin;
+} SysinfoInstance;
 
-static void
-sysinfo_init(XfcePanelPlugin* plugin)
-{
-  load_sysinfo_plugins();
-}
-
-XFCE_PANEL_PLUGIN_REGISTER(sysinfo_init);
+#endif
