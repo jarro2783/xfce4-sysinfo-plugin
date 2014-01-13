@@ -1,1 +1,1 @@
-SUBDIRS = src plugins
+SUBDIRS = src plugins include

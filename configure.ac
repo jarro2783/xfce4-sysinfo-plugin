@@ -25,5 +25,7 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  plugins/Makefile
                  plugins/cpu/Makefile
+                 include/Makefile
+                 include/xfce4-sysinfo-plugin/Makefile
                 ])
 AC_OUTPUT
