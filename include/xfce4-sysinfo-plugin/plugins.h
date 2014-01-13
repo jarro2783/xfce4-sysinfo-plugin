@@ -24,11 +24,37 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #define SYSINFO_PLUGIN_PLUGINS_H
 
 #include <stddef.h>
+#include <glib.h>
 
 #define SYSINFO_PLUGIN_DIR PLUGIN_DIR "/sysinfo"
 
+typedef struct 
+{
+  //the range of the data
+  double lower;
+  double upper;
+
+  //an array of the data
+  double* data;
+} SysinfoPluginData;
+
 typedef struct sysinfoplugin SysinfoPlugin;
+
+struct sysinfoplugin
+{
+  int num_data;
+  gchar** data_names;
+
+  //data private to the plugin
+  void* plugin_data;
+
+  void (*get_data)(SysinfoPlugin*, SysinfoPluginData*);
+  void (*close)(SysinfoPlugin*);
+};
+
 typedef struct sysinfopluginlist SysinfoPluginList;
+
+typedef SysinfoPlugin* (*sysinfo_plugin_init)();
 
 SysinfoPluginList*
 sysinfo_load_plugins();

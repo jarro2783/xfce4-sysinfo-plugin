@@ -30,10 +30,6 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #define LIST_SIZE_INIT 5
 #define LIST_SIZE_REALLOC 2
 
-struct sysinfoplugin
-{
-};
-
 struct sysinfopluginlist
 {
   SysinfoPlugin** plugins;
@@ -109,6 +105,8 @@ sysinfo_tryload_plugin(const char* file)
   {
     return 0;
   }
+
+  return (*(sysinfo_plugin_init)init)();
 }
 
 SysinfoPlugin*

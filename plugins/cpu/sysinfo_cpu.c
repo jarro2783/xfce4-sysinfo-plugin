@@ -24,19 +24,51 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include "xfce4-sysinfo-plugin/plugins.h"
 
-void
-sysinfo_data_plugin_init()
+#define NUM_FIELDS 4
+
+enum
 {
-}
+  CPU_TOTAL,
+  CPU_NICE,
+  CPU_SYS,
+  CPU_IOWAIT
+};
+
+static gchar* data_names[NUM_FIELDS] =
+  {
+    "Total",
+    "Nice",
+    "System",
+    "IO Wait"
+  };
 
 void
-cpu_get_data()
+cpu_get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
 {
   glibtop_cpu cpu;
   glibtop_get_cpu(&cpu);
+
+  //always has 0 to 100%
+  data->lower = 0;
+  data->upper = 100;
+
+  //the_data[CPU_TOTAL] = cpu.total;
 }
 
 static void
-cpu_close()
+cpu_close(SysinfoPlugin* plugin)
 {
+}
+
+SysinfoPlugin*
+sysinfo_data_plugin_init()
+{
+  SysinfoPlugin* plugin = g_new(SysinfoPlugin, 1);
+
+  plugin->num_data = NUM_FIELDS;
+  plugin->data_names = data_names;
+  plugin->plugin_data = g_new(double, NUM_FIELDS);
+
+  plugin->get_data = &cpu_get_data;
+  plugin->close = &cpu_close;
 }
