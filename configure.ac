@@ -16,6 +16,7 @@ AM_PROG_CC_C_O
 
 LT_PREREQ([2.2.6])
 LT_INIT([disable-static])
+LTDL_INIT
 
 # Check for libraries
 XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.10.0])

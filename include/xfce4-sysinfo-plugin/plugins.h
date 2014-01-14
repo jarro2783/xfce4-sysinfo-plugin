@@ -42,6 +42,7 @@ typedef struct sysinfoplugin SysinfoPlugin;
 
 struct sysinfoplugin
 {
+  gchar* plugin_name;
   int num_data;
   gchar** data_names;
 
@@ -64,6 +65,9 @@ sysinfo_tryload_plugin(const char* file);
 
 SysinfoPluginList*
 sysinfo_pluginlist_new();
+
+size_t
+sysinfo_pluginlist_size(SysinfoPluginList* list);
 
 SysinfoPlugin*
 sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i);

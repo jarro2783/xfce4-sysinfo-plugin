@@ -109,6 +109,12 @@ sysinfo_tryload_plugin(const char* file)
   return (*(sysinfo_plugin_init)init)();
 }
 
+size_t
+sysinfo_pluginlist_size(SysinfoPluginList* list)
+{
+  return list->num_plugins;
+}
+
 SysinfoPlugin*
 sysinfo_pluginlist_get(SysinfoPluginList* list, size_t i)
 {

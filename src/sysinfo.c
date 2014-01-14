@@ -56,7 +56,7 @@ sysinfo_init(XfcePanelPlugin* plugin)
   SysinfoInstance* sysinfo = sysinfo_construct(plugin);
 
   //load up the sysinfo data source plugins
-  load_sysinfo_plugins(sysinfo);
+  SysinfoPluginList* list = sysinfo_load_plugins();
 
   //connect some signals
   g_signal_connect (G_OBJECT(plugin), "free-data",

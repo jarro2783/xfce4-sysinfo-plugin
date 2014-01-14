@@ -2,19 +2,34 @@ plugindir = $(libexecdir)/xfce4/panel-plugins
 
 plugin_LTLIBRARIES = libxfce4-sysinfo-plugin.la
 
+noinst_PROGRAMS = tester
+
+tester_SOURCES = tester.c
+
+tester_CFLAGS = \
+        -I$(top_srcdir)/include \
+				$(LIBGTOP_CFLAGS)
+
+tester_LDADD = \
+				$(top_builddir)/src/libxfce4-sysinfo-plugin.la
+
 libxfce4_sysinfo_plugin_la_CFLAGS = \
         $(LIBXFCE4PANEL_CFLAGS) \
         $(LIBGTOP_CFLAGS) \
         -DPLUGIN_DIR=\"$(plugindir)\" \
         -I$(top_srcdir)/include
 
-libxfce4_sysinfo_plugin_la_LIBADD = $(LIBXFCE4PANEL_LIBS)
+libxfce4_sysinfo_plugin_la_LIBADD = \
+				$(LIBXFCE4PANEL_LIBS) \
+				$(LIBGTOP_LIBS) \
+				$(LIBLTDL)
 
 libxfce4_sysinfo_plugin_la_LDFLAGS = \
         -avoid-version \
         -module \
-        -no-undefined \
-        -export-symbols-regex '^xfce_panel_module_(preinit|init|construct)' 
+        -no-undefined
+
+#        -export-symbols-regex '^xfce_panel_module_(preinit|init|construct)' 
 
 libxfce4_sysinfo_plugin_la_SOURCES = \
         sysinfo.c \
