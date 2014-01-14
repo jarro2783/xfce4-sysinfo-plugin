@@ -22,3 +22,4 @@ missing
 .deps
 .libs
 *.swp
+*.o
