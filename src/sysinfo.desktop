@@ -1,0 +1,7 @@
+[Xfce Panel]
+Type=X-XFCE-PanelPlugin
+Encoding=UTF-8
+Name=System Info
+Comment=Pluggable system information graphs
+X-XFCE-Module=sysinfo
+X-XFCE-Unique=FALSE

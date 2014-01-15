@@ -30,19 +30,19 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 enum
 {
-  CPU_USER,
   CPU_NICE,
   CPU_SYS,
   CPU_IOWAIT,
+  CPU_USER,
   CPU_TOTAL
 };
 
 static gchar* data_names[DATA_FIELDS] =
   {
-    "User",
     "Nice",
     "System",
     "IO Wait"
+    "User",
   };
 
 typedef struct

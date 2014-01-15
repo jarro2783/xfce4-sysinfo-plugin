@@ -25,7 +25,21 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 typedef struct
 {
   XfcePanelPlugin* plugin;
+  GtkWidget* top;
 } SysinfoInstance;
+
+static void
+draw_graph_cb(GtkWidget* w, GdkEventExpose* event, gpointer data)
+{
+}
+
+static void
+construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
+{
+  GtkOrientation orientation = xfce_panel_plugin_get_orientation(plugin);
+
+  sysinfo->top = xfce_hvbox_new(orientation, FALSE, 0);
+}
 
 static SysinfoInstance*
 sysinfo_construct(XfcePanelPlugin* plugin)
@@ -37,6 +51,8 @@ sysinfo_construct(XfcePanelPlugin* plugin)
   sysinfo = g_slice_new0(SysinfoInstance);
 
   sysinfo->plugin = plugin;
+
+  construct_gui(plugin, sysinfo);
 
   return sysinfo;
 }
