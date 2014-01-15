@@ -13,6 +13,12 @@ int main(int argc, char* argv[])
 
   printf("Found %zu plugins\n", size);
 
+  if (size == 0)
+  {
+    printf("Quitting\n");
+    exit(0);
+  }
+
   size_t i = 0;
   while (i != size)
   {

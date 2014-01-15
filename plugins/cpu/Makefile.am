@@ -1,4 +1,4 @@
-plugindir = $(libexecdir)/xfce4/panel-plugins/sysinfo
+plugindir = $(libdir)/xfce4/panel/plugins/sysinfo
 
 plugin_LTLIBRARIES = libsysinfo-cpu.la
 

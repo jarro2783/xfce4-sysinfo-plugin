@@ -25,12 +25,36 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 typedef struct
 {
   XfcePanelPlugin* plugin;
+  SysinfoPluginList* plugin_list;
   GtkWidget* top;
+  GtkWidget* hvbox;
+
+  size_t num_displayed;
+  GtkWidget** frames;
+  GtkWidget** drawing;
 } SysinfoInstance;
 
-static void
+static gboolean
 draw_graph_cb(GtkWidget* w, GdkEventExpose* event, gpointer data)
 {
+  cairo_t* cr = gdk_cairo_create(w->window);
+
+  cairo_move_to(cr, 0, 0);
+  cairo_line_to(cr, 20, 20);
+  return TRUE;
+}
+
+static gboolean
+orientation_cb
+(
+  XfcePanelPlugin* plugin, 
+  GtkOrientation o, 
+  SysinfoInstance* sysinfo
+)
+{
+  xfce_hvbox_set_orientation(XFCE_HVBOX(sysinfo->hvbox), o);
+
+  return FALSE;
 }
 
 static void
@@ -38,7 +62,47 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkOrientation orientation = xfce_panel_plugin_get_orientation(plugin);
 
-  sysinfo->top = xfce_hvbox_new(orientation, FALSE, 0);
+  sysinfo->top = gtk_event_box_new();
+  gtk_event_box_set_visible_window(GTK_EVENT_BOX(sysinfo->top), FALSE);
+  gtk_event_box_set_above_child(GTK_EVENT_BOX(sysinfo->top), TRUE);
+
+  xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
+
+  gtk_container_add(GTK_CONTAINER(plugin), sysinfo->top);
+
+  sysinfo->hvbox = xfce_hvbox_new(orientation, FALSE, 0);
+  gtk_container_add(GTK_CONTAINER(sysinfo->top), sysinfo->hvbox);
+
+  //each graph is a drawing area in a frame
+  size_t num_plugins = sysinfo_pluginlist_size(sysinfo->plugin_list);
+  size_t i = 0;
+
+  sysinfo->num_displayed = num_plugins;
+
+  fprintf(stderr, "opened %zu plugins\n", num_plugins);
+
+  sysinfo->frames = g_new(GtkWidget*, num_plugins);
+  sysinfo->drawing = g_new(GtkWidget*, num_plugins);
+
+  while (i != num_plugins)
+  {
+    GtkWidget* frame = gtk_frame_new(NULL);
+    GtkWidget* drawing = gtk_drawing_area_new();
+    //GtkWidget* drawing = gtk_label_new("Hello world");
+
+    gtk_container_add(GTK_CONTAINER(frame), drawing);
+    gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), frame, TRUE, TRUE, 0);
+
+    sysinfo->frames[i] = frame;
+    sysinfo->drawing[i] = drawing;
+    
+    g_signal_connect_after(G_OBJECT(drawing), "expose-event",
+                     G_CALLBACK(draw_graph_cb), sysinfo);
+
+    ++i;
+  }
+
+  gtk_widget_show_all(sysinfo->top);
 }
 
 static SysinfoInstance*
@@ -52,9 +116,53 @@ sysinfo_construct(XfcePanelPlugin* plugin)
 
   sysinfo->plugin = plugin;
 
+  sysinfo->plugin_list = sysinfo_load_plugins();
+
   construct_gui(plugin, sysinfo);
 
   return sysinfo;
+}
+
+static gboolean
+size_changed_cb
+(
+  XfcePanelPlugin* plugin,
+  gint size,
+  SysinfoInstance* sysinfo
+)
+{
+  GtkOrientation orientation;
+
+  fprintf(stderr, "size changed to %d\n", size);
+
+  /* get the orientation of the plugin */
+  orientation = xfce_panel_plugin_get_orientation (plugin);
+
+  gint h, w;
+
+  /* set the widget size */
+  if (orientation == GTK_ORIENTATION_HORIZONTAL)
+  {
+    h = size;
+    w = 60;
+  }
+  else
+  {
+    w = size;
+    h = 60;
+  }
+  
+  size_t i = 0;
+  while (i != sysinfo->num_displayed)
+  {
+    //gtk_widget_set_size_request (GTK_WIDGET(plugin), w, h);
+    gtk_widget_set_size_request (sysinfo->frames[i], w, h);
+    //gtk_widget_set_size_request (sysinfo->drawing[i], w, h);
+    ++i;
+  }
+
+  /* we handled the orientation */
+  return TRUE;
 }
 
 static void
@@ -77,6 +185,11 @@ sysinfo_init(XfcePanelPlugin* plugin)
   //connect some signals
   g_signal_connect (G_OBJECT(plugin), "free-data",
                     G_CALLBACK (sysinfo_free), sysinfo);
+  g_signal_connect (G_OBJECT(plugin), "size-changed",
+                    G_CALLBACK (size_changed_cb), sysinfo);
+  g_signal_connect (G_OBJECT(plugin), "orientation-changed", 
+                    G_CALLBACK(orientation_cb), sysinfo);
+
 }
 
 XFCE_PANEL_PLUGIN_REGISTER(sysinfo_init);
