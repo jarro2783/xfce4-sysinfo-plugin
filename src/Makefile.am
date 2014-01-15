@@ -11,7 +11,7 @@ tester_CFLAGS = \
 				$(LIBGTOP_CFLAGS)
 
 tester_LDADD = \
-				$(top_builddir)/src/libxfce4-sysinfo-plugin.la
+				$(top_builddir)/src/libsysinfo.la
 
 libsysinfo_la_CFLAGS = \
         $(LIBXFCE4PANEL_CFLAGS) \
