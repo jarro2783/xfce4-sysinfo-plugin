@@ -22,7 +22,17 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include <libxfce4panel/xfce-panel-plugin.h>
 
+typedef struct sysinfoinstance SysinfoInstance;
+
 typedef struct
+{
+  SysinfoInstance* sysinfo;
+  
+  //which frame are we on?
+  size_t frame;
+} FrameData;
+
+struct sysinfoinstance
 {
   XfcePanelPlugin* plugin;
   SysinfoPluginList* plugin_list;
@@ -32,15 +42,28 @@ typedef struct
   size_t num_displayed;
   GtkWidget** frames;
   GtkWidget** drawing;
-} SysinfoInstance;
+
+  FrameData* drawn_frames;
+};
 
 static gboolean
-draw_graph_cb(GtkWidget* w, GdkEventExpose* event, gpointer data)
+draw_graph_cb(GtkWidget* w, GdkEventExpose* event, SysinfoInstance* sysinfo)
 {
   cairo_t* cr = gdk_cairo_create(w->window);
 
-  cairo_move_to(cr, 0, 0);
-  cairo_line_to(cr, 20, 20);
+  gint width = w->allocation.width;
+  gint height = w->allocation.height;
+
+  cairo_set_line_width(cr, 1);
+  cairo_move_to(cr, width, height);
+  cairo_line_to(cr, width, height - 20);
+  cairo_move_to(cr, width - 1, height);
+  cairo_line_to(cr, width - 1, 22);
+  cairo_move_to(cr, width - 2, height);
+  cairo_line_to(cr, width - 2, 24);
+  cairo_move_to(cr, width - 3, height);
+  cairo_line_to(cr, width - 3, 26);
+  cairo_stroke(cr);
   return TRUE;
 }
 
