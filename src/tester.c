@@ -2,6 +2,7 @@
 #include "xfce4-sysinfo-plugin/plugins.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[])
 {
