@@ -33,6 +33,10 @@ typedef struct
   size_t history_end;
   size_t history_size;
 
+  //minimum and maximums of all the data preceding
+  double* history_min;
+  double* history_max;
+
   //which plugin are we handling
   SysinfoPlugin* plugin;
 
@@ -148,10 +152,19 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 }
 
 static void
+update_history(FrameData* frame, int fields, double* data)
+{
+  //add a new data point into the history
+  //computes the new min and max
+}
+
+static void
 update_frame(FrameData* frame)
 {
   SysinfoPluginData data;
   (*frame->plugin->get_data)(frame->plugin, &data);
+
+  update_history(frame, frame->plugin->num_data, data.data);
 }
 
 static gboolean
