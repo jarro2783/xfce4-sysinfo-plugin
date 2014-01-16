@@ -27,9 +27,18 @@ typedef struct sysinfoinstance SysinfoInstance;
 typedef struct
 {
   SysinfoInstance* sysinfo;
-  
-  //which frame are we on?
-  size_t frame;
+
+  double** history;
+  size_t history_start;
+  size_t history_end;
+  size_t history_size;
+
+  //which plugin are we handling
+  SysinfoPlugin* plugin;
+
+  //our frame
+  GtkWidget* frame;
+  GtkWidget* drawing;
 } FrameData;
 
 struct sysinfoinstance
@@ -40,10 +49,9 @@ struct sysinfoinstance
   GtkWidget* hvbox;
 
   size_t num_displayed;
-  GtkWidget** frames;
-  GtkWidget** drawing;
-
   FrameData* drawn_frames;
+
+  guint timeout_id;
 };
 
 static gboolean
@@ -53,6 +61,12 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, SysinfoInstance* sysinfo)
 
   gint width = w->allocation.width;
   gint height = w->allocation.height;
+
+  cairo_rectangle(cr, 0, 0, width, height);
+  cairo_set_source_rgb(cr, 1, 1, 1);
+  cairo_fill(cr);
+
+  cairo_set_source_rgb(cr, 0.2, 0.2, 1);
 
   cairo_set_line_width(cr, 1);
   cairo_move_to(cr, width, height);
@@ -102,13 +116,14 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
   sysinfo->num_displayed = num_plugins;
 
-  fprintf(stderr, "opened %zu plugins\n", num_plugins);
+  sysinfo->drawn_frames = g_new0(FrameData, num_plugins);
 
-  sysinfo->frames = g_new(GtkWidget*, num_plugins);
-  sysinfo->drawing = g_new(GtkWidget*, num_plugins);
+  fprintf(stderr, "opened %zu plugins\n", num_plugins);
 
   while (i != num_plugins)
   {
+    FrameData* fd = &sysinfo->drawn_frames[i];
+
     GtkWidget* frame = gtk_frame_new(NULL);
     GtkWidget* drawing = gtk_drawing_area_new();
     //GtkWidget* drawing = gtk_label_new("Hello world");
@@ -116,16 +131,41 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     gtk_container_add(GTK_CONTAINER(frame), drawing);
     gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), frame, TRUE, TRUE, 0);
 
-    sysinfo->frames[i] = frame;
-    sysinfo->drawing[i] = drawing;
-    
+    fd->frame = frame;
+    fd->drawing = drawing;
+
     g_signal_connect_after(G_OBJECT(drawing), "expose-event",
                      G_CALLBACK(draw_graph_cb), sysinfo);
+
+    SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
+    fd->plugin = plugin;
+    fd->history = g_new0(double*, plugin->num_data);
 
     ++i;
   }
 
   gtk_widget_show_all(sysinfo->top);
+}
+
+static void
+update_frame(FrameData* frame)
+{
+  SysinfoPluginData data;
+  (*frame->plugin->get_data)(frame->plugin, &data);
+}
+
+static gboolean
+update(SysinfoInstance* sysinfo)
+{
+  size_t i = 0;
+  while (i != sysinfo->num_displayed)
+  {
+    update_frame(&sysinfo->drawn_frames[i]);
+    gtk_widget_queue_draw(sysinfo->drawn_frames[i].drawing);
+    ++i;
+  }
+
+  return TRUE;
 }
 
 static SysinfoInstance*
@@ -142,6 +182,11 @@ sysinfo_construct(XfcePanelPlugin* plugin)
   sysinfo->plugin_list = sysinfo_load_plugins();
 
   construct_gui(plugin, sysinfo);
+
+  sysinfo->timeout_id = g_timeout_add(250, (GSourceFunc)update, sysinfo);
+
+  //do one update
+  update(sysinfo);
 
   return sysinfo;
 }
@@ -179,7 +224,7 @@ size_changed_cb
   while (i != sysinfo->num_displayed)
   {
     //gtk_widget_set_size_request (GTK_WIDGET(plugin), w, h);
-    gtk_widget_set_size_request (sysinfo->frames[i], w, h);
+    gtk_widget_set_size_request (sysinfo->drawn_frames[i].frame, w, h);
     //gtk_widget_set_size_request (sysinfo->drawing[i], w, h);
     ++i;
   }

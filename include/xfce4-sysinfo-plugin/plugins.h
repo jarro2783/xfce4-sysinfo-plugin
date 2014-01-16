@@ -30,10 +30,6 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 typedef struct 
 {
-  //the range of the data
-  double lower;
-  double upper;
-
   //an array of the data
   double* data;
 } SysinfoPluginData;
@@ -49,7 +45,15 @@ struct sysinfoplugin
   //data private to the plugin
   void* plugin_data;
 
+  //gets the data for the current slice
   void (*get_data)(SysinfoPlugin*, SysinfoPluginData*);
+
+  //get the range to display given the minimum and maximum values that have
+  //been seen in the history
+  void (*get_range)(double min, double max, 
+        double* display_min, double* display_max);
+
+  //close the plugin
   void (*close)(SysinfoPlugin*);
 };
 
