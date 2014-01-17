@@ -68,10 +68,6 @@ get_data(double* data)
 void
 cpu_get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
 {
-  //always has 0 to 100%
-  data->lower = 0;
-  data->upper = 100;
-
   CPUData* the_data = (CPUData*)plugin->plugin_data;
 
   //swap the buffers
@@ -105,6 +101,20 @@ cpu_get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
   data->data = p;
 }
 
+static void 
+cpu_get_range
+(
+  double min, 
+  double max, 
+  double* display_min, 
+  double* display_max
+)
+{
+  //always display 0 to 100
+  *display_min = 0;
+  *display_max = 100;
+}
+
 static void
 cpu_close(SysinfoPlugin* plugin)
 {
@@ -132,6 +142,7 @@ sysinfo_data_plugin_init()
   plugin->plugin_data = data;
 
   plugin->get_data = &cpu_get_data;
+  plugin->get_range = &cpu_get_range;
   plugin->close = &cpu_close;
 
   return plugin;

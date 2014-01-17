@@ -59,7 +59,7 @@ struct sysinfoinstance
 };
 
 static gboolean
-draw_graph_cb(GtkWidget* w, GdkEventExpose* event, SysinfoInstance* sysinfo)
+draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 {
   cairo_t* cr = gdk_cairo_create(w->window);
 
@@ -72,6 +72,14 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, SysinfoInstance* sysinfo)
 
   cairo_set_source_rgb(cr, 0.2, 0.2, 1);
 
+  //compute where the zero is for this frame
+
+  frame->plugin->
+
+  //draw each data point as a line from 0 to the value
+  //the drawing area needs to be scaled appropriately
+
+#if 0
   cairo_set_line_width(cr, 1);
   cairo_move_to(cr, width, height);
   cairo_line_to(cr, width, height - 20);
@@ -82,6 +90,8 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, SysinfoInstance* sysinfo)
   cairo_move_to(cr, width - 3, height);
   cairo_line_to(cr, width - 3, 26);
   cairo_stroke(cr);
+#endif
+
   return TRUE;
 }
 
@@ -139,7 +149,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     fd->drawing = drawing;
 
     g_signal_connect_after(G_OBJECT(drawing), "expose-event",
-                     G_CALLBACK(draw_graph_cb), sysinfo);
+                     G_CALLBACK(draw_graph_cb), fd);
 
     SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
     fd->plugin = plugin;
@@ -156,6 +166,37 @@ update_history(FrameData* frame, int fields, double* data)
 {
   //add a new data point into the history
   //computes the new min and max
+
+  //TODO min and max
+  
+  //slide the window along one
+
+  //move the end, if it goes past the end, wrap back to the beginning
+  //then increment the start if they overlap
+  //if the start goes past the end then wrap back to the beginning
+  ++frame->history_end;
+
+  if (frame->history_end == frame->history_size)
+  {
+    frame->history_end = 0;
+  }
+
+  if (frame->history_end == frame->history_start)
+  {
+    ++frame->history_start;
+  }
+
+  if (frame->history_start == frame->history_end)
+  {
+    frame->history_start = 0;
+  }
+
+  size_t i = 0;
+  while (i != fields)
+  {
+    frame->history[i][frame->history_end] = data[i];
+    ++i;
+  }
 }
 
 static void
