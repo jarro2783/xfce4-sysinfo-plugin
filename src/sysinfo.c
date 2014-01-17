@@ -58,6 +58,22 @@ struct sysinfoinstance
   guint timeout_id;
 };
 
+static inline void
+draw_one_point
+(
+  cairo_t* cr, 
+  double scale,
+  int base, 
+  gint width, 
+  gint height, 
+  int x, 
+  double y
+)
+{
+  cairo_move_to(cr, width - x, base);
+  cairo_line_to(cr, width - x, height - base - scale * y);
+}
+
 static gboolean
 draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 {
@@ -71,16 +87,47 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   cairo_fill(cr);
 
   cairo_set_source_rgb(cr, 0.2, 0.2, 1);
+  cairo_set_line_width(cr, 1);
 
   //compute where the zero is for this frame
 
-  frame->plugin->
+  double min = 0;
+  double max = 100;
+  frame->plugin->get_range(0, 0, &min, &max);
+
+  double range = max - min;
+  double scale = range / height;
+
+  int base = height - scale * min;
 
   //draw each data point as a line from 0 to the value
   //the drawing area needs to be scaled appropriately
 
+  size_t i = frame->history_start;
+  size_t x = 0;
+  while (i != frame->history_end && i != frame->history_size)
+  {
+    //draw
+    draw_one_point(cr, scale, base, width, height, x, frame->history[0][i]);
+    ++i;
+    ++x;
+  }
+
+  if (i == frame->history_size && i != frame->history_end)
+  {
+    i = 0;
+
+    while (i != frame->history_end)
+    {
+      //draw
+      draw_one_point(cr, scale, base, width, height, x, frame->history[0][i]);
+      ++i;
+      ++x;
+    }
+  }
+
+
 #if 0
-  cairo_set_line_width(cr, 1);
   cairo_move_to(cr, width, height);
   cairo_line_to(cr, width, height - 20);
   cairo_move_to(cr, width - 1, height);
@@ -89,8 +136,9 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   cairo_line_to(cr, width - 2, 24);
   cairo_move_to(cr, width - 3, height);
   cairo_line_to(cr, width - 3, 26);
-  cairo_stroke(cr);
 #endif
+
+  cairo_stroke(cr);
 
   return TRUE;
 }
