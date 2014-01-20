@@ -22,6 +22,9 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include <libxfce4panel/xfce-panel-plugin.h>
 
+#define DEFAULT_HISTORY_SIZE 80
+#define DEFAULT_WIDTH 60
+
 typedef struct sysinfoinstance SysinfoInstance;
 
 typedef struct
@@ -39,6 +42,8 @@ typedef struct
 
   //which plugin are we handling
   SysinfoPlugin* plugin;
+
+  gint width;
 
   //our frame
   GtkWidget* frame;
@@ -80,7 +85,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 {
   cairo_t* cr = gdk_cairo_create(w->window);
 
-  gint width = w->allocation.width;
+  gint width = frame->width;
   gint height = w->allocation.height;
 
   cairo_rectangle(cr, 0, 0, width, height);
@@ -117,7 +122,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   }
 
   size_t x = width - num_items;
-  while (i != frame->history_end && i != frame->history_size)
+  while (i != frame->history_end + 1 && i != frame->history_size)
   {
     //draw
     draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
@@ -125,11 +130,11 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
     ++x;
   }
 
-  if (i == frame->history_size && i != frame->history_end)
+  if (i == frame->history_size)
   {
     i = 0;
 
-    while (i != frame->history_end)
+    while (i != frame->history_end + 1)
     {
       //draw
       draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
@@ -137,18 +142,6 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
       ++x;
     }
   }
-
-
-#if 0
-  cairo_move_to(cr, width, height);
-  cairo_line_to(cr, width, height - 20);
-  cairo_move_to(cr, width - 1, height);
-  cairo_line_to(cr, width - 1, 22);
-  cairo_move_to(cr, width - 2, height);
-  cairo_line_to(cr, width - 2, 24);
-  cairo_move_to(cr, width - 3, height);
-  cairo_line_to(cr, width - 3, 26);
-#endif
 
   cairo_stroke(cr);
 
@@ -215,13 +208,17 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     fd->plugin = plugin;
     fd->history = g_new0(double*, plugin->num_data);
 
+    fd->history_size = DEFAULT_HISTORY_SIZE;
+    fd->history_end = 0;
+    fd->history_start = 0;
+
     //allocate a history for each component of the data
     size_t j = 0;
     while (j != plugin->num_data)
     {
       //TODO, allocate this correctly
-      fd->history[j] = g_new0(double, 200);
-      fd->history_size = 200;
+      fd->history[j] = g_new0(double, DEFAULT_HISTORY_SIZE);
+      fd->width = DEFAULT_WIDTH;
       ++j;
     }
 
@@ -256,7 +253,7 @@ update_history(FrameData* frame, int fields, double* data)
     ++frame->history_start;
   }
 
-  if (frame->history_start == frame->history_end)
+  if (frame->history_start == frame->history_size)
   {
     frame->history_start = 0;
   }
@@ -336,12 +333,12 @@ size_changed_cb
   if (orientation == GTK_ORIENTATION_HORIZONTAL)
   {
     h = size;
-    w = 60;
+    w = DEFAULT_WIDTH;
   }
   else
   {
     w = size;
-    h = 60;
+    h = DEFAULT_WIDTH;
   }
   
   size_t i = 0;
