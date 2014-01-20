@@ -70,8 +70,9 @@ draw_one_point
   double y
 )
 {
-  cairo_move_to(cr, width - x, base);
-  cairo_line_to(cr, width - x, height - base - scale * y);
+  int xdraw = x;
+  cairo_move_to(cr, xdraw + 0.5, base + 0.5);
+  cairo_line_to(cr, xdraw + 0.5, base - scale * y + 0.5);
 }
 
 static gboolean
@@ -88,6 +89,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   cairo_set_source_rgb(cr, 0.2, 0.2, 1);
   cairo_set_line_width(cr, 1);
+  cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
 
   //compute where the zero is for this frame
 
@@ -96,19 +98,29 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   frame->plugin->get_range(0, 0, &min, &max);
 
   double range = max - min;
-  double scale = range / height;
+  double scale = height / range;
 
   int base = height - scale * min;
 
   //draw each data point as a line from 0 to the value
   //the drawing area needs to be scaled appropriately
 
-  size_t i = frame->history_start;
-  size_t x = 0;
+  size_t slices =
+    (frame->history_end - frame->history_start);
+  slices = slices < 0 ? slices + frame->history_size : slices;
+  size_t num_items = width < slices ? width : slices;
+
+  size_t i = (frame->history_end - num_items);
+  if (i < 0)
+  {
+    i += frame->history_size;
+  }
+
+  size_t x = width - num_items;
   while (i != frame->history_end && i != frame->history_size)
   {
     //draw
-    draw_one_point(cr, scale, base, width, height, x, frame->history[0][i]);
+    draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
     ++i;
     ++x;
   }
@@ -120,7 +132,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
     while (i != frame->history_end)
     {
       //draw
-      draw_one_point(cr, scale, base, width, height, x, frame->history[0][i]);
+      draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
       ++i;
       ++x;
     }
@@ -202,6 +214,16 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
     fd->plugin = plugin;
     fd->history = g_new0(double*, plugin->num_data);
+
+    //allocate a history for each component of the data
+    size_t j = 0;
+    while (j != plugin->num_data)
+    {
+      //TODO, allocate this correctly
+      fd->history[j] = g_new0(double, 200);
+      fd->history_size = 200;
+      ++j;
+    }
 
     ++i;
   }
