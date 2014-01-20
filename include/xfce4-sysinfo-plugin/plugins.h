@@ -36,11 +36,19 @@ typedef struct
 
 typedef struct sysinfoplugin SysinfoPlugin;
 
+typedef struct
+{
+  double red;
+  double green;
+  double blue;
+} SysinfoColor;
+
 struct sysinfoplugin
 {
   gchar* plugin_name;
   int num_data;
   gchar** data_names;
+  SysinfoColor* colors;
 
   //data private to the plugin
   void* plugin_data;

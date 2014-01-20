@@ -63,10 +63,11 @@ struct sysinfoinstance
   guint timeout_id;
 };
 
-static inline void
+static inline int
 draw_one_point
 (
   cairo_t* cr, 
+  SysinfoColor* color,
   double scale,
   int base, 
   gint width, 
@@ -76,14 +77,28 @@ draw_one_point
 )
 {
   int xdraw = x;
+  int ydraw = base - scale * y;
+
+  cairo_set_source_rgb(cr, 
+    color->red, 
+    color->green,
+    color->blue
+  );
+
   cairo_move_to(cr, xdraw + 0.5, base + 0.5);
-  cairo_line_to(cr, xdraw + 0.5, base - scale * y + 0.5);
+  cairo_line_to(cr, xdraw + 0.5, ydraw + 0.5);
+
+  cairo_stroke(cr);
+  
+  return ydraw;
 }
 
 static gboolean
 draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 {
   cairo_t* cr = gdk_cairo_create(w->window);
+
+  SysinfoPlugin* plugin = frame->plugin;
 
   gint width = frame->width;
   gint height = w->allocation.height;
@@ -92,7 +107,6 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   cairo_set_source_rgb(cr, 1, 1, 1);
   cairo_fill(cr);
 
-  cairo_set_source_rgb(cr, 0.2, 0.2, 1);
   cairo_set_line_width(cr, 1);
   cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
 
@@ -118,11 +132,21 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   int i = (frame->history_end - num_items);
   i = i < 0 ? i + frame->history_size : i;
 
+  int nextbase = base;
   int x = width - num_items;
   while (i != frame->history_end && i != frame->history_size)
   {
-    //draw
-    draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
+    nextbase = base;
+    size_t j = 0;
+    while (j != frame->plugin->num_data)
+    {
+      //draw
+      nextbase = draw_one_point(cr, &plugin->colors[j], scale, nextbase, 
+        width, height, x, frame->history[j][i]);
+
+      ++j;
+    }
+
     ++i;
     ++x;
   }
@@ -133,14 +157,20 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
     while (i != frame->history_end)
     {
-      //draw
-      draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
+      nextbase = base;
+      size_t j = 0;
+      while (j != frame->plugin->num_data)
+      {
+        //draw
+        nextbase = draw_one_point(cr, &plugin->colors[j],
+          scale, nextbase, width, height, x, frame->history[j][i]);
+        ++j;
+      }
+
       ++i;
       ++x;
     }
   }
-
-  cairo_stroke(cr);
 
   return TRUE;
 }
