@@ -32,9 +32,9 @@ typedef struct
   SysinfoInstance* sysinfo;
 
   double** history;
-  size_t history_start;
-  size_t history_end;
-  size_t history_size;
+  int history_start;
+  int history_end;
+  int history_size;
 
   //minimum and maximums of all the data preceding
   double* history_min;
@@ -110,19 +110,16 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   //draw each data point as a line from 0 to the value
   //the drawing area needs to be scaled appropriately
 
-  size_t slices =
+  int slices =
     (frame->history_end - frame->history_start);
-  slices = slices < 0 ? slices + frame->history_size : slices;
-  size_t num_items = width < slices ? width : slices;
+  slices = slices <= 0 ? slices + frame->history_size : slices;
+  int num_items = width < slices ? width : slices;
 
-  size_t i = (frame->history_end - num_items);
-  if (i < 0)
-  {
-    i += frame->history_size;
-  }
+  int i = (frame->history_end - num_items);
+  i = i < 0 ? i + frame->history_size : i;
 
-  size_t x = width - num_items;
-  while (i != frame->history_end + 1 && i != frame->history_size)
+  int x = width - num_items;
+  while (i != frame->history_end && i != frame->history_size)
   {
     //draw
     draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
@@ -134,7 +131,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   {
     i = 0;
 
-    while (i != frame->history_end + 1)
+    while (i != frame->history_end)
     {
       //draw
       draw_one_point(cr, scale, base, width, height, x, frame->history[3][i]);
@@ -238,9 +235,15 @@ update_history(FrameData* frame, int fields, double* data)
   
   //slide the window along one
 
-  //move the end, if it goes past the end, wrap back to the beginning
-  //then increment the start if they overlap
-  //if the start goes past the end then wrap back to the beginning
+  //fill the data first
+  size_t i = 0;
+  while (i != fields)
+  {
+    frame->history[i][frame->history_end] = data[i];
+    ++i;
+  }
+
+  //now we can increment
   ++frame->history_end;
 
   if (frame->history_end == frame->history_size)
@@ -248,6 +251,7 @@ update_history(FrameData* frame, int fields, double* data)
     frame->history_end = 0;
   }
 
+  //then if the end has caught up to the start, we can increment the start
   if (frame->history_end == frame->history_start)
   {
     ++frame->history_start;
@@ -258,12 +262,10 @@ update_history(FrameData* frame, int fields, double* data)
     frame->history_start = 0;
   }
 
-  size_t i = 0;
-  while (i != fields)
-  {
-    frame->history[i][frame->history_end] = data[i];
-    ++i;
-  }
+  //move the end, if it goes past the end, wrap back to the beginning
+  //then increment the start if they overlap
+  //if the start goes past the end then wrap back to the beginning
+
 }
 
 static void
