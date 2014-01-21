@@ -10,8 +10,7 @@ tester_CFLAGS = \
         -I$(top_srcdir)/include \
 				$(LIBGTOP_CFLAGS)
 
-tester_LDADD = \
-				$(top_builddir)/src/libsysinfo.la
+tester_LDADD = libsysinfo.la
 
 libsysinfo_la_CFLAGS = \
         $(LIBXFCE4PANEL_CFLAGS) \
