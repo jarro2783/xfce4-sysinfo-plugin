@@ -21,6 +21,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 */
 
 #include <glibtop/netlist.h>
+#include <glibtop/netload.h>
 #include <math.h>
 
 #include "xfce4-sysinfo-plugin/plugins.h"
@@ -45,6 +46,13 @@ typedef struct
 {
   gchar** interfaces;
   int num_interfaces;
+
+  //the actual data this and list slice
+  double* current;
+  double* last;
+
+  //the computed data rate
+  double* rate;
 } NetData;
 
 static void
@@ -68,6 +76,53 @@ init_color(SysinfoPlugin* plugin)
 }
 
 static void
+add_difference(double* result, double last, double value)
+{
+  *result = *result + value - last;
+}
+
+static void
+collect_data(NetData* data)
+{
+  //swap buffers around
+  double* current = data->last;
+  double* last = data->last = data->current;
+  data->current = current;
+
+  //zero the current data
+  memset(current, 0, sizeof(double) * DATA_FIELDS);
+
+  size_t i = 0;
+  while (i != data->num_interfaces)
+  {
+    glibtop_netload buf;
+    glibtop_get_netload(&buf, data->interfaces[i]);
+
+    if (buf.if_flags & GLIBTOP_IF_FLAGS_LOOPBACK)
+    {
+      //add all data to local data collection
+      add_difference(&current[NET_LOCAL], last[NET_LOCAL], buf.bytes_total);
+    }
+    else
+    {
+      add_difference(&current[NET_IN], last[NET_IN], buf.bytes_in);
+      add_difference(&current[NET_OUT], last[NET_OUT], buf.bytes_out);
+    }
+
+    ++i;
+  }
+
+}
+
+static void
+get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
+{
+  NetData* plugin_data = (NetData*)plugin->plugin_data;
+
+  collect_data(plugin_data);
+}
+
+static void
 get_interfaces(NetData* data)
 {
   glibtop_netlist list;
@@ -81,6 +136,28 @@ close(SysinfoPlugin* plugin)
   NetData* data = (NetData*)plugin->plugin_data;
 
   g_strfreev(data->interfaces);
+
+  g_free(data->current);
+  g_free(data->last);
+  g_free(data->rate);
+}
+
+static NetData*
+init_data()
+{
+  NetData* data = g_new(NetData, 1);
+
+  data->current = g_new(double, DATA_FIELDS);
+  data->last = g_new(double, DATA_FIELDS);
+  data->rate = g_new(double, DATA_FIELDS);
+
+  get_interfaces(data);
+
+  //do a first run so that we have some meaningful numbers for the next
+  //time around
+  collect_data(data);
+
+  return data;
 }
 
 SysinfoPlugin*
@@ -94,8 +171,10 @@ sysinfo_data_plugin_init()
 
   init_color(plugin);
 
-  NetData* data = g_new(NetData, 1);
-  plugin->plugin_data = data;
+  plugin->plugin_data = init_data();
+
+  plugin->close = &close;
+  plugin->get_data = &get_data;
 
   return plugin;
 }
