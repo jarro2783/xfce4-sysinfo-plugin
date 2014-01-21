@@ -1,1 +1,1 @@
-SUBDIRS = cpu
+SUBDIRS = cpu net

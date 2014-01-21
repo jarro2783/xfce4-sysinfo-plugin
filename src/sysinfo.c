@@ -1,5 +1,5 @@
 /* xfce4-sysinfo-plugin
-   Copyright (C) 2013 Jarryd Beck
+   Copyright (C) 2013, 2014 Jarryd Beck
 
 This file is part of xfce4-sysinfo-plugin.
 
@@ -336,10 +336,10 @@ sysinfo_construct(XfcePanelPlugin* plugin)
 
   construct_gui(plugin, sysinfo);
 
-  sysinfo->timeout_id = g_timeout_add(250, (GSourceFunc)update, sysinfo);
-
   //do one update
   update(sysinfo);
+
+  sysinfo->timeout_id = g_timeout_add(250, (GSourceFunc)update, sysinfo);
 
   return sysinfo;
 }
@@ -376,9 +376,10 @@ size_changed_cb
   size_t i = 0;
   while (i != sysinfo->num_displayed)
   {
+    sysinfo->drawn_frames[i].width = w;
     //gtk_widget_set_size_request (GTK_WIDGET(plugin), w, h);
-    gtk_widget_set_size_request (sysinfo->drawn_frames[i].frame, w, h);
-    //gtk_widget_set_size_request (sysinfo->drawing[i], w, h);
+    //gtk_widget_set_size_request (sysinfo->drawn_frames[i].frame, w, h);
+    gtk_widget_set_size_request (sysinfo->drawn_frames[i].drawing, w, h);
     ++i;
   }
 

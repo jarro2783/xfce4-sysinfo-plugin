@@ -1,6 +1,6 @@
 /* cpu data for xfce4-sysinfo-plugin
 
-   Copyright (C) 2013 Jarryd Beck
+   Copyright (C) 2013, 2014 Jarryd Beck
 
 This file is part of xfce4-sysinfo-plugin.
 
