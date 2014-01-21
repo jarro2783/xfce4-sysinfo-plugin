@@ -30,5 +30,7 @@ sysinfo_data_plugin_init()
 {
   SysinfoPlugin* plugin = g_new(SysinfoPlugin, 1);
 
+  plugin->plugin_name = "Net Load";
+
   return plugin;
 }

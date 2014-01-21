@@ -390,6 +390,17 @@ size_changed_cb
 static void
 sysinfo_free(SysinfoInstance* sysinfo)
 {
+  //free each plugin
+  size_t i = 0;
+  size_t num_plugins = sysinfo_pluginlist_size(sysinfo->plugin_list);
+
+  while (i != num_plugins)
+  {
+    SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
+    (*plugin->close)(plugin);
+    ++i;
+  }
+
   g_slice_free(SysinfoInstance, sysinfo);
 
   glibtop_close();

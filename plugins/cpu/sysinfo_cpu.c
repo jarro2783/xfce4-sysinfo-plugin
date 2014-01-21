@@ -118,6 +118,15 @@ cpu_get_range
 static void
 cpu_close(SysinfoPlugin* plugin)
 {
+  CPUData* data = (CPUData*)plugin->plugin_data;
+
+  g_free(data->last);
+  g_free(data->current);
+  g_free(data->percentages);
+
+  g_free(data);
+
+  g_free(plugin);
 }
 
 static void
