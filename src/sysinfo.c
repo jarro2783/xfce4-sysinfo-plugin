@@ -22,6 +22,8 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include <libxfce4panel/xfce-panel-plugin.h>
 
+#include <glibtop/close.h>
+
 #define DEFAULT_HISTORY_SIZE 80
 #define DEFAULT_WIDTH 60
 
@@ -36,9 +38,7 @@ typedef struct
   int history_end;
   int history_size;
 
-  //minimum and maximums of all the data preceding
-  double* history_min;
-  double* history_max;
+  double history_max;
 
   //which plugin are we handling
   SysinfoPlugin* plugin;
@@ -114,7 +114,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   double min = 0;
   double max = 100;
-  frame->plugin->get_range(0, 0, &min, &max);
+  frame->plugin->get_range(0, frame->history_max, &min, &max);
 
   double range = max - min;
   double scale = height / range;
@@ -261,8 +261,6 @@ update_history(FrameData* frame, int fields, double* data)
   //add a new data point into the history
   //computes the new min and max
 
-  //TODO min and max
-  
   //slide the window along one
 
   //fill the data first
@@ -292,10 +290,26 @@ update_history(FrameData* frame, int fields, double* data)
     frame->history_start = 0;
   }
 
-  //move the end, if it goes past the end, wrap back to the beginning
-  //then increment the start if they overlap
-  //if the start goes past the end then wrap back to the beginning
+  //TODO min and max
 
+  //at the moment, just count the max of the whole array
+  i = 0;
+  double max = 0;
+  while (i != fields)
+  {
+    size_t j = 0;
+    while (j != frame->history_size)
+    {
+      if (frame->history[i][j] > max)
+      {
+        max = frame->history[i][j];
+      }
+      ++j;
+    }
+    ++i;
+  }
+
+  frame->history_max = max;
 }
 
 static void
@@ -411,9 +425,6 @@ sysinfo_init(XfcePanelPlugin* plugin)
 {
   //create new plugin
   SysinfoInstance* sysinfo = sysinfo_construct(plugin);
-
-  //load up the sysinfo data source plugins
-  SysinfoPluginList* list = sysinfo_load_plugins();
 
   //connect some signals
   g_signal_connect (G_OBJECT(plugin), "free-data",

@@ -60,13 +60,13 @@ init_color(SysinfoPlugin* plugin)
 {
   SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
 
-  c[NET_IN].red = 0xff / 255.;
-  c[NET_IN].green = 0xe8 / 255.;
-  c[NET_IN].blue = 0;
-
   c[NET_OUT].red = 0xff / 255.;
-  c[NET_OUT].green = 0xf2 / 255.;
-  c[NET_OUT].blue = 0x73 / 255.;
+  c[NET_OUT].green = 0xe8 / 255.;
+  c[NET_OUT].blue = 0;
+
+  c[NET_IN].red = 0xff / 255.;
+  c[NET_IN].green = 0xf2 / 255.;
+  c[NET_IN].blue = 0x73 / 255.;
 
   c[NET_LOCAL].red = 0xa6 / 255.;
   c[NET_LOCAL].green = 0x97 / 255.;
@@ -76,9 +76,9 @@ init_color(SysinfoPlugin* plugin)
 }
 
 static void
-add_difference(double* result, double last, double value)
+add_data(double* result, double value)
 {
-  *result = *result + value - last;
+  *result = *result + value;
 }
 
 static void
@@ -98,20 +98,38 @@ collect_data(NetData* data)
     glibtop_netload buf;
     glibtop_get_netload(&buf, data->interfaces[i]);
 
-    if (buf.if_flags & GLIBTOP_IF_FLAGS_LOOPBACK)
+    if (buf.if_flags & (1L << GLIBTOP_IF_FLAGS_LOOPBACK))
     {
       //add all data to local data collection
-      add_difference(&current[NET_LOCAL], last[NET_LOCAL], buf.bytes_total);
+      add_data(&current[NET_LOCAL], buf.bytes_total);
     }
     else
     {
-      add_difference(&current[NET_IN], last[NET_IN], buf.bytes_in);
-      add_difference(&current[NET_OUT], last[NET_OUT], buf.bytes_out);
+      add_data(&current[NET_IN], buf.bytes_in);
+      add_data(&current[NET_OUT], buf.bytes_out);
     }
 
     ++i;
   }
 
+  //compute the rates
+  i = 0;
+  while (i != DATA_FIELDS)
+  {
+    data->rate[i] = current[i] - last[i];
+    ++i;
+  }
+}
+
+static void
+get_range(double min, double max, double* display_min, double* display_max)
+{
+  //scale based on the max
+  //for max = x.y E z, we go to x + 1 E z
+
+  *display_min = 0;
+
+  *display_max = pow(10, ceil(log10(max)));
 }
 
 static void
@@ -120,6 +138,8 @@ get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
   NetData* plugin_data = (NetData*)plugin->plugin_data;
 
   collect_data(plugin_data);
+
+  data->data = plugin_data->rate;
 }
 
 static void
@@ -175,6 +195,7 @@ sysinfo_data_plugin_init()
 
   plugin->close = &close;
   plugin->get_data = &get_data;
+  plugin->get_range = &get_range;
 
   return plugin;
 }
