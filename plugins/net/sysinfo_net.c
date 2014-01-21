@@ -28,6 +28,8 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #define DATA_FIELDS 3
 
+static double logscale;
+
 enum
 {
   NET_IN,
@@ -60,16 +62,16 @@ init_color(SysinfoPlugin* plugin)
 {
   SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
 
-  c[NET_OUT].red = 0xff / 255.;
-  c[NET_OUT].green = 0xe8 / 255.;
-  c[NET_OUT].blue = 0;
+  c[NET_OUT].red = 0xed / 255.;
+  c[NET_OUT].green = 0xd4 / 255.;
+  c[NET_OUT].blue = 0x00 / 255.;
 
-  c[NET_IN].red = 0xff / 255.;
-  c[NET_IN].green = 0xf2 / 255.;
-  c[NET_IN].blue = 0x73 / 255.;
+  c[NET_IN].red = 0xfc / 255.;
+  c[NET_IN].green = 0xe9 / 255.;
+  c[NET_IN].blue = 0x4f / 255.;
 
-  c[NET_LOCAL].red = 0xa6 / 255.;
-  c[NET_LOCAL].green = 0x97 / 255.;
+  c[NET_LOCAL].red = 0xc4 / 255.;
+  c[NET_LOCAL].green = 0xa0 / 255.;
   c[NET_LOCAL].blue = 0;
 
   plugin->colors = c;
@@ -129,7 +131,7 @@ get_range(double min, double max, double* display_min, double* display_max)
 
   *display_min = 0;
 
-  *display_max = pow(10, ceil(log10(max)));
+  *display_max = pow(1.8, ceil(logscale * log(max)));
 }
 
 static void
@@ -183,6 +185,10 @@ init_data()
 SysinfoPlugin*
 sysinfo_data_plugin_init()
 {
+  //repetition if the plugin is loaded up multiple times, but it's really
+  //quite irrelevant
+  logscale = 1/log(1.8);
+
   SysinfoPlugin* plugin = g_new(SysinfoPlugin, 1);
 
   plugin->plugin_name = "Net Load";

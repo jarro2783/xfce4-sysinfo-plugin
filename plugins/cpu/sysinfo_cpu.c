@@ -134,21 +134,21 @@ init_color(SysinfoPlugin* plugin)
 {
   SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
 
-  c[CPU_NICE].red = 0x66 / 255.;
+  c[CPU_NICE].red = 0x00 / 255.;
   c[CPU_NICE].green = 0xa3 / 255.;
-  c[CPU_NICE].blue = 0xd2 / 255.;
+  c[CPU_NICE].blue = 0xff / 255.;
 
-  c[CPU_SYS].red = 0x3f / 255.;
+  c[CPU_SYS].red = 0x00 / 255.;
   c[CPU_SYS].green = 0x92 / 255.;
-  c[CPU_SYS].blue = 0xd2 / 255.;
+  c[CPU_SYS].blue = 0xe6 / 255.;
 
-  c[CPU_IOWAIT].red = 0x0b / 255.;
-  c[CPU_IOWAIT].green = 0x61 / 255.;
-  c[CPU_IOWAIT].blue = 0xa4 / 255.;
+  c[CPU_IOWAIT].red = 0x00 / 255.;
+  c[CPU_IOWAIT].green = 0x2f / 255.;
+  c[CPU_IOWAIT].blue = 0x3d / 255.;
 
-  c[CPU_USER].red = 0x03 / 255.;
-  c[CPU_USER].green = 0x3e / 255.;
-  c[CPU_USER].blue = 0x6b / 255.;
+  c[CPU_USER].red = 0x00 / 255.;
+  c[CPU_USER].green = 0x72 / 255.;
+  c[CPU_USER].blue = 0xb3 / 255.;
 
   plugin->colors = c;
 }
