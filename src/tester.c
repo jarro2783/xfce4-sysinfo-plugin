@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int main(int argc, char* argv[])
 {
@@ -28,11 +29,11 @@ int main(int argc, char* argv[])
     ++i;
   }
 
-  printf("Printing data every second, press ^C to quit\n");
+  printf("Printing data every 250 milliseconds, press ^C to quit\n");
 
   while (1)
   {
-    sleep(1);
+    usleep(250000);
     i = 0;
     while (i != size)
     {
