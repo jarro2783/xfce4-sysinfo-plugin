@@ -1,1 +1,3 @@
-Nothing so far...
+2014-01-22 Jarryd Beck <jarrydb@cse.unsw.edu.au>
+
+	Initial system now stable. Contains a netload graph and a cpu graph.
