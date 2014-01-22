@@ -7,6 +7,8 @@ A wishlist of all the features to add, in a rough priority:
   * Width
   * Colours
 * Tooltips
+* Efficient min/max calculation
+* Proper buffer sizing as width is changed
 * Memory usage
 * Translation framework
 * Swap space
