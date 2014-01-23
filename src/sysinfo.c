@@ -272,7 +272,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     size_t j = 0;
     while (j != plugin->num_data)
     {
-      //TODO, allocate this correctly
+      //allocate something so that we have a valid history
       fd->history[j] = g_new0(double, DEFAULT_HISTORY_SIZE);
       fd->width = DEFAULT_WIDTH;
       ++j;
@@ -280,6 +280,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
     gtk_widget_set_has_tooltip(drawing, TRUE);
     fd->tooltip_text = gtk_label_new(NULL);
+    g_object_ref(fd->tooltip_text);
     g_signal_connect(drawing, "query-tooltip", G_CALLBACK(tooltip_cb), fd);
 
     ++i;
@@ -352,6 +353,11 @@ update_frame(FrameData* frame)
   (*frame->plugin->get_data)(frame->plugin, &data);
 
   update_history(frame, frame->plugin->num_data, data.data);
+
+  if (gtk_widget_get_visible(frame->tooltip_text))
+  {
+    update_tooltip(frame);
+  }
 }
 
 static gboolean
@@ -401,8 +407,6 @@ size_changed_cb
 {
   GtkOrientation orientation;
 
-  fprintf(stderr, "size changed to %d\n", size);
-
   /* get the orientation of the plugin */
   orientation = xfce_panel_plugin_get_orientation (plugin);
 
@@ -449,6 +453,13 @@ sysinfo_free(SysinfoInstance* sysinfo)
   }
 
   g_slice_free(SysinfoInstance, sysinfo);
+
+  i = 0;
+  while (i != sysinfo->num_displayed)
+  {
+    gtk_widget_destroy(sysinfo->drawn_frames[i].tooltip_text);
+    ++i;
+  }
 
   glibtop_close();
 }

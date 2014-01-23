@@ -129,7 +129,7 @@ cpu_get_tooltip(SysinfoPlugin* plugin)
   g_snprintf(
     tooltip,
     TOOLTIP_SIZE,
-    "== CPU Usage ==\n\nUser: %d%%\nNice: %d%%\nSystem: %d%%\nIO Wait:%d%%",
+    "== CPU Usage ==\n\nUser: %d%%\nNice: %d%%\nSystem: %d%%\nIO Wait: %d%%",
     (int)p[CPU_USER],
     (int)p[CPU_NICE],
     (int)p[CPU_SYS],
