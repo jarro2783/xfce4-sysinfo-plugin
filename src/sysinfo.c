@@ -37,6 +37,7 @@ typedef struct
   int history_start;
   int history_end;
   int history_size;
+  double* history_sum;
 
   double history_max;
 
@@ -49,6 +50,9 @@ typedef struct
   GtkWidget* frame;
   GtkWidget* drawing;
   GtkWidget* tooltip_text;
+
+  //maximum of sliding window data
+  GQueue* slidingqueue;
 } FrameData;
 
 struct sysinfoinstance
@@ -263,6 +267,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
     fd->plugin = plugin;
     fd->history = g_new0(double*, plugin->num_data);
+    fd->history_sum = g_new0(double, DEFAULT_HISTORY_SIZE);
 
     fd->history_size = DEFAULT_HISTORY_SIZE;
     fd->history_end = 0;
@@ -275,6 +280,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
       //allocate something so that we have a valid history
       fd->history[j] = g_new0(double, DEFAULT_HISTORY_SIZE);
       fd->width = DEFAULT_WIDTH;
+      fd->slidingqueue = g_queue_new();
       ++j;
     }
 
@@ -299,10 +305,22 @@ update_history(FrameData* frame, int fields, double* data)
 
   //fill the data first
   size_t i = 0;
+
+  int sum = 0;
   while (i != fields)
   {
     frame->history[i][frame->history_end] = data[i];
+    sum += data[i];
     ++i;
+  }
+
+  GQueue* q = frame->slidingqueue;
+
+  //add the new value into the maximum
+  while (!g_queue_is_empty(q) && 
+    sum >= frame->history_sum[GPOINTER_TO_INT(g_queue_peek_tail(q))])
+  {
+    g_queue_pop_tail(q);
   }
 
   //now we can increment
@@ -317,7 +335,16 @@ update_history(FrameData* frame, int fields, double* data)
   if (frame->history_end == frame->history_start)
   {
     ++frame->history_start;
+
+    //drop the old value off the maximum calculation
+    while (!g_queue_is_empty(q) && 
+      GPOINTER_TO_INT(g_queue_peek_head(q)) <= frame->history_start)
+    {
+      g_queue_pop_head(q);
+    }
   }
+
+  g_queue_push_tail(q, GINT_TO_POINTER(frame->history_end));
 
   if (frame->history_start == frame->history_size)
   {
@@ -439,6 +466,13 @@ size_changed_cb
 }
 
 static void
+cleanup_frame(FrameData* f)
+{
+  gtk_widget_destroy(f->tooltip_text);
+  g_queue_free(f->slidingqueue);
+}
+
+static void
 sysinfo_free(SysinfoInstance* sysinfo)
 {
   //free each plugin
@@ -457,7 +491,7 @@ sysinfo_free(SysinfoInstance* sysinfo)
   i = 0;
   while (i != sysinfo->num_displayed)
   {
-    gtk_widget_destroy(sysinfo->drawn_frames[i].tooltip_text);
+    cleanup_frame(&sysinfo->drawn_frames[i]);
     ++i;
   }
 
