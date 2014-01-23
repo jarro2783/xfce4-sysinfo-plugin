@@ -61,6 +61,9 @@ struct sysinfoplugin
   void (*get_range)(double min, double max, 
         double* display_min, double* display_max);
 
+  //get the tooltip text
+  gchar* (*get_tooltip)(SysinfoPlugin*);
+
   //close the plugin
   void (*close)(SysinfoPlugin*);
 };

@@ -27,6 +27,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #define DATA_FIELDS 4
 #define RECORD_FIELDS 5
+#define TOOLTIP_SIZE 150
 
 enum
 {
@@ -50,6 +51,8 @@ typedef struct
   double* last;
   double* current;
   double* percentages;
+
+  gchar tooltip[TOOLTIP_SIZE];
 } CPUData;
 
 static void
@@ -115,6 +118,27 @@ cpu_get_range
   *display_max = 100;
 }
 
+static gchar*
+cpu_get_tooltip(SysinfoPlugin* plugin)
+{
+  CPUData* data = (CPUData*)plugin->plugin_data;
+  gchar* tooltip = data->tooltip;
+
+  double* p = data->percentages;
+
+  g_snprintf(
+    tooltip,
+    TOOLTIP_SIZE,
+    "== CPU Usage ==\n\nUser: %d%%\nNice: %d%%\nSystem: %d%%\nIO Wait:%d%%",
+    (int)p[CPU_USER],
+    (int)p[CPU_NICE],
+    (int)p[CPU_SYS],
+    (int)p[CPU_IOWAIT]
+  );
+
+  return tooltip;
+}
+
 static void
 cpu_close(SysinfoPlugin* plugin)
 {
@@ -178,6 +202,7 @@ sysinfo_data_plugin_init()
 
   plugin->get_data = &cpu_get_data;
   plugin->get_range = &cpu_get_range;
+  plugin->get_tooltip = &cpu_get_tooltip;
   plugin->close = &cpu_close;
 
   return plugin;

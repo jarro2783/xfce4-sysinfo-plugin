@@ -48,6 +48,7 @@ typedef struct
   //our frame
   GtkWidget* frame;
   GtkWidget* drawing;
+  GtkWidget* tooltip_text;
 } FrameData;
 
 struct sysinfoinstance
@@ -189,6 +190,34 @@ orientation_cb
 }
 
 static void
+update_tooltip(FrameData* fd)
+{
+  gchar* text = (*fd->plugin->get_tooltip)(fd->plugin);
+
+  gtk_label_set_text(GTK_LABEL(fd->tooltip_text), text);
+}
+
+static gboolean
+tooltip_cb
+(
+  GtkWidget* widget,
+  gint x,
+  gint y,
+  gboolean kb_mode,
+  GtkTooltip* tooltip,
+  gpointer data
+)
+{
+  FrameData* fd = (FrameData*)data;
+
+  update_tooltip(fd);
+
+  gtk_tooltip_set_custom(tooltip, fd->tooltip_text);
+
+  return TRUE;
+}
+
+static void
 construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkOrientation orientation = xfce_panel_plugin_get_orientation(plugin);
@@ -248,6 +277,10 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
       fd->width = DEFAULT_WIDTH;
       ++j;
     }
+
+    gtk_widget_set_has_tooltip(drawing, TRUE);
+    fd->tooltip_text = gtk_label_new(NULL);
+    g_signal_connect(drawing, "query-tooltip", G_CALLBACK(tooltip_cb), fd);
 
     ++i;
   }

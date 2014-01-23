@@ -182,6 +182,12 @@ init_data()
   return data;
 }
 
+static gchar*
+net_get_tooltip(SysinfoPlugin* plugin)
+{
+  return "";
+}
+
 SysinfoPlugin*
 sysinfo_data_plugin_init()
 {
@@ -202,6 +208,7 @@ sysinfo_data_plugin_init()
   plugin->close = &close;
   plugin->get_data = &get_data;
   plugin->get_range = &get_range;
+  plugin->get_tooltip = &net_get_tooltip;
 
   return plugin;
 }
