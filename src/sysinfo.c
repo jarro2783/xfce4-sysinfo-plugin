@@ -314,6 +314,10 @@ update_history(FrameData* frame, int fields, double* data)
     ++i;
   }
 
+  frame->history_sum[frame->history_end] = sum;
+
+  int oldend = frame->history_end;
+
   GQueue* q = frame->slidingqueue;
 
   //add the new value into the maximum
@@ -344,7 +348,7 @@ update_history(FrameData* frame, int fields, double* data)
     }
   }
 
-  g_queue_push_tail(q, GINT_TO_POINTER(frame->history_end));
+  g_queue_push_tail(q, GINT_TO_POINTER(oldend));
 
   //the maximum is the head of the queue
   frame->history_max = GPOINTER_TO_INT(g_queue_peek_head(q));

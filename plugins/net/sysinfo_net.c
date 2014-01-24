@@ -27,6 +27,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #include "xfce4-sysinfo-plugin/plugins.h"
 
 #define DATA_FIELDS 3
+#define TOOLTIP_SIZE 300
 
 static double logscale;
 
@@ -55,6 +56,8 @@ typedef struct
 
   //the computed data rate
   double* rate;
+
+  gchar tooltip[TOOLTIP_SIZE];
 } NetData;
 
 static void
@@ -185,7 +188,19 @@ init_data()
 static gchar*
 net_get_tooltip(SysinfoPlugin* plugin)
 {
-  return "";
+  NetData* data = (NetData*)plugin->plugin_data;
+  gchar* in = g_format_size(data->rate[NET_IN]);
+  gchar* out = g_format_size(data->rate[NET_OUT]);
+  gchar* local = g_format_size(data->rate[NET_LOCAL]);
+
+  g_snprintf(
+    data->tooltip,
+    TOOLTIP_SIZE,
+    "== Network Traffic ==\nIn: %s/s\nOut: %s/s\nLocal: %s/s",
+    in, out, local
+  );
+
+  return data->tooltip;
 }
 
 SysinfoPlugin*
