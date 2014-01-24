@@ -20,6 +20,7 @@ LTDL_INIT
 
 # Check for libraries
 XDT_CHECK_PACKAGE([LIBXFCE4PANEL], [libxfce4panel-1.0], [4.10.0])
+XDT_CHECK_PACKAGE([LIBXFCE4UI], [libxfce4ui-1], [4.10.0])
 XDT_CHECK_PACKAGE([LIBGTOP], [libgtop-2.0], [2.28.5])
 
 AC_CONFIG_FILES([Makefile

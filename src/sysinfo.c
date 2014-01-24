@@ -21,6 +21,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #include "xfce4-sysinfo-plugin/plugins.h"
 
 #include <libxfce4panel/xfce-panel-plugin.h>
+#include <libxfce4ui/libxfce4ui.h>
 
 #include <glibtop/close.h>
 
@@ -544,18 +545,41 @@ sysinfo_free(SysinfoInstance* sysinfo)
 }
 
 static void
+configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
+{
+  GtkWidget* dlg;
+
+  //enable this once we know it all works
+  //xfce_panel_plugin_block_menu(plugin);
+
+  dlg = xfce_titled_dialog_new_with_buttons("System Info Properties",
+    GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(plugin))),
+    GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_NO_SEPARATOR,
+    GTK_STOCK_CLOSE,
+    GTK_RESPONSE_OK,
+    NULL
+  );
+
+  gtk_widget_show(dlg);
+}
+
+static void
 sysinfo_init(XfcePanelPlugin* plugin)
 {
   //create new plugin
   SysinfoInstance* sysinfo = sysinfo_construct(plugin);
 
+  xfce_panel_plugin_menu_show_configure(plugin);
+
   //connect some signals
   g_signal_connect (G_OBJECT(plugin), "free-data",
-                    G_CALLBACK (sysinfo_free), sysinfo);
+    G_CALLBACK (sysinfo_free), sysinfo);
   g_signal_connect (G_OBJECT(plugin), "size-changed",
-                    G_CALLBACK (size_changed_cb), sysinfo);
+    G_CALLBACK (size_changed_cb), sysinfo);
   g_signal_connect (G_OBJECT(plugin), "orientation-changed", 
-                    G_CALLBACK(orientation_cb), sysinfo);
+    G_CALLBACK(orientation_cb), sysinfo);
+  g_signal_connect (plugin, "configure-plugin", 
+    G_CALLBACK(configure_plugin), sysinfo);
 
 }
 

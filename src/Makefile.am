@@ -14,6 +14,7 @@ tester_LDADD = libsysinfo.la
 
 libsysinfo_la_CFLAGS = \
         $(LIBXFCE4PANEL_CFLAGS) \
+				$(LIBXFCE4UI_CFLAGS) \
         $(LIBGTOP_CFLAGS) \
         -DPLUGIN_DIR=\"$(plugindir)\" \
         -I$(top_srcdir)/include
