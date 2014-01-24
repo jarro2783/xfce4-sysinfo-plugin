@@ -21,6 +21,7 @@ libsysinfo_la_CFLAGS = \
 
 libsysinfo_la_LIBADD = \
 				$(LIBXFCE4PANEL_LIBS) \
+				$(LIBXFCE4UI_LIBS) \
 				$(LIBGTOP_LIBS) \
 				$(LIBLTDL)
 
