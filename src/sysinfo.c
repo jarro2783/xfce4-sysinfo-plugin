@@ -26,6 +26,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #define DEFAULT_HISTORY_SIZE 80
 #define DEFAULT_WIDTH 60
+#define DEFAULT_HEIGHT 40
 
 typedef struct sysinfoinstance SysinfoInstance;
 
@@ -115,6 +116,12 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   cairo_set_line_width(cr, 1);
   cairo_set_line_cap(cr, CAIRO_LINE_CAP_SQUARE);
+
+  //if we have no data yet we can quit
+  if (frame->history_sum == NULL)
+  {
+    return TRUE;
+  }
 
   //compute where the zero is for this frame
 
@@ -225,6 +232,46 @@ tooltip_cb
 }
 
 static void
+resize_drawing(GtkWidget* w, GdkRectangle* alloc, FrameData* f)
+{
+  //reallocate history here now that we have the actual size of the drawing
+
+  gint hw = alloc->width + 1;
+  SysinfoPlugin* p = f->plugin;
+
+  size_t j = 0;
+  while (j != p->num_data)
+  {
+    if (f->history[j] == NULL)
+    {
+      f->history[j] = g_new0(double, hw);
+    }
+    else
+    {
+      f->history[j] = g_renew(double, f->history[j], hw);
+    }
+    f->history_size = hw;
+
+    f->history_start = 0;
+    f->history_end = 0;
+
+    ++j;
+  }
+
+  if (f->history_sum == NULL)
+  {
+    f->history_sum = g_new0(double, hw);
+  }
+  else
+  {
+    f->history_sum = g_renew(double, f->history_sum, hw);
+  }
+
+  //reset the sliding max queue
+  g_queue_clear(f->slidingqueue);
+}
+
+static void
 construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkOrientation orientation = xfce_panel_plugin_get_orientation(plugin);
@@ -267,22 +314,22 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     g_signal_connect_after(G_OBJECT(drawing), "expose-event",
                      G_CALLBACK(draw_graph_cb), fd);
 
+    //connect the resized event
+    g_signal_connect_after(
+      G_OBJECT(drawing), 
+      "size-allocate",
+      G_CALLBACK(resize_drawing), fd
+    );
+                     
+
     SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
     fd->plugin = plugin;
     fd->history = g_new0(double*, plugin->num_data);
-    fd->history_sum = g_new0(double, DEFAULT_HISTORY_SIZE);
-
-    fd->history_size = DEFAULT_HISTORY_SIZE;
-    fd->history_end = 0;
-    fd->history_start = 0;
 
     //allocate a history for each component of the data
     size_t j = 0;
     while (j != plugin->num_data)
     {
-      //allocate something so that we have a valid history
-      fd->history[j] = g_new0(double, DEFAULT_HISTORY_SIZE);
-      fd->width = DEFAULT_WIDTH;
       fd->slidingqueue = g_queue_new();
       ++j;
     }
@@ -304,7 +351,11 @@ update_history(FrameData* frame, int fields, double* data)
   //add a new data point into the history
   //computes the new min and max
 
-  //slide the window along one
+  //if we have no history, we can quit
+  if (frame->history_sum == NULL)
+  {
+    return;
+  }
 
   //fill the data first
   size_t i = 0;
@@ -363,29 +414,6 @@ update_history(FrameData* frame, int fields, double* data)
   }
 
   frame->max_q_size = g_queue_get_length(q);
-
-#if 0
-  //TODO min and max
-
-  //at the moment, just count the max of the whole array
-  i = 0;
-  double max = 0;
-  while (i != fields)
-  {
-    size_t j = 0;
-    while (j != frame->history_size)
-    {
-      if (frame->history[i][j] > max)
-      {
-        max = frame->history[i][j];
-      }
-      ++j;
-    }
-    ++i;
-  }
-
-  frame->history_max = max;
-#endif
 }
 
 static void
@@ -449,12 +477,10 @@ size_changed_cb
 {
   GtkOrientation orientation;
 
-  /* get the orientation of the plugin */
   orientation = xfce_panel_plugin_get_orientation (plugin);
 
   gint h, w;
 
-  /* set the widget size */
   if (orientation == GTK_ORIENTATION_HORIZONTAL)
   {
     h = size;
@@ -463,20 +489,24 @@ size_changed_cb
   else
   {
     w = size;
-    h = DEFAULT_WIDTH;
+    h = DEFAULT_HEIGHT;
   }
+
+  FrameData* frames = sysinfo->drawn_frames;
   
   size_t i = 0;
   while (i != sysinfo->num_displayed)
   {
-    sysinfo->drawn_frames[i].width = w;
+    FrameData* f = &frames[i];
+    f->width = w;
     //gtk_widget_set_size_request (GTK_WIDGET(plugin), w, h);
-    //gtk_widget_set_size_request (sysinfo->drawn_frames[i].frame, w, h);
-    gtk_widget_set_size_request (sysinfo->drawn_frames[i].drawing, w, h);
+    gtk_widget_set_size_request (f->frame, w, h);
+    //gtk_widget_set_size_request (sysinfo->drawn_frames[i].drawing, w, h);
+
     ++i;
   }
 
-  /* we handled the orientation */
+
   return TRUE;
 }
 
