@@ -336,9 +336,9 @@ update_history(FrameData* frame, int fields, double* data)
   {
     ++frame->history_start;
 
-    //drop the old value off the maximum calculation
-    while (!g_queue_is_empty(q) && 
-      GPOINTER_TO_INT(g_queue_peek_head(q)) <= frame->history_start)
+    //if the last value was the maximum, drop it
+    if (!g_queue_is_empty(q) && 
+      GPOINTER_TO_INT(g_queue_peek_head(q)) == frame->history_end)
     {
       g_queue_pop_head(q);
     }
@@ -346,11 +346,15 @@ update_history(FrameData* frame, int fields, double* data)
 
   g_queue_push_tail(q, GINT_TO_POINTER(frame->history_end));
 
+  //the maximum is the head of the queue
+  frame->history_max = GPOINTER_TO_INT(g_queue_peek_head(q));
+
   if (frame->history_start == frame->history_size)
   {
     frame->history_start = 0;
   }
 
+#if 0
   //TODO min and max
 
   //at the moment, just count the max of the whole array
@@ -371,6 +375,7 @@ update_history(FrameData* frame, int fields, double* data)
   }
 
   frame->history_max = max;
+#endif
 }
 
 static void
