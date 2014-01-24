@@ -40,6 +40,7 @@ typedef struct
   double* history_sum;
 
   double history_max;
+  int max_q_size;
 
   //which plugin are we handling
   SysinfoPlugin* plugin;
@@ -176,6 +177,8 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
       ++x;
     }
   }
+
+  cairo_destroy(cr);
 
   return TRUE;
 }
@@ -351,12 +354,15 @@ update_history(FrameData* frame, int fields, double* data)
   g_queue_push_tail(q, GINT_TO_POINTER(oldend));
 
   //the maximum is the head of the queue
-  frame->history_max = GPOINTER_TO_INT(g_queue_peek_head(q));
+  frame->history_max = 
+    frame->history_sum[GPOINTER_TO_INT(g_queue_peek_head(q))];
 
   if (frame->history_start == frame->history_size)
   {
     frame->history_start = 0;
   }
+
+  frame->max_q_size = g_queue_get_length(q);
 
 #if 0
   //TODO min and max
