@@ -29,6 +29,9 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #define DEFAULT_WIDTH 60
 #define DEFAULT_HEIGHT 40
 
+//define this for extra debugging in tooltips
+//#define TOOLTIP_DEBUG
+
 typedef struct sysinfoinstance SysinfoInstance;
 
 typedef struct
@@ -47,7 +50,9 @@ typedef struct
   //which plugin are we handling
   SysinfoPlugin* plugin;
 
-  gint width;
+  #ifdef TOOLTIP_DEBUG
+  gchar tt[300];
+  #endif
 
   //our frame
   GtkWidget* frame;
@@ -108,7 +113,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   SysinfoPlugin* plugin = frame->plugin;
 
-  gint width = frame->width;
+  gint width = w->allocation.width;
   gint height = w->allocation.height;
 
   cairo_rectangle(cr, 0, 0, width, height);
@@ -138,8 +143,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   //draw each data point as a line from 0 to the value
   //the drawing area needs to be scaled appropriately
 
-  int slices =
-    (frame->history_end - frame->history_start);
+  int slices = frame->history_end - frame->history_start;
   slices = slices <= 0 ? slices + frame->history_size : slices;
   int num_items = width < slices ? width : slices;
 
@@ -207,9 +211,26 @@ orientation_cb
 static void
 update_tooltip(FrameData* fd)
 {
+  #ifdef TOOLTIP_DEBUG
+    #define LABEL_TEXT (fd->tt)
+  #else
+    #define LABEL_TEXT text
+  #endif
+
   gchar* text = (*fd->plugin->get_tooltip)(fd->plugin);
 
-  gtk_label_set_text(GTK_LABEL(fd->tooltip_text), text);
+  #ifdef TOOLTIP_DEBUG
+  g_snprintf(
+    fd->tt,
+    300,
+    "%s\nHistory Width = %d\nDrawing Width = %d",
+    text,
+    fd->history_size,
+    fd->drawing->allocation.width
+  );
+  #endif
+
+  gtk_label_set_text(GTK_LABEL(fd->tooltip_text), LABEL_TEXT);
 }
 
 static gboolean
@@ -499,7 +520,6 @@ size_changed_cb
   while (i != sysinfo->num_displayed)
   {
     FrameData* f = &frames[i];
-    f->width = w;
     //gtk_widget_set_size_request (GTK_WIDGET(plugin), w, h);
     gtk_widget_set_size_request (f->frame, w, h);
     //gtk_widget_set_size_request (sysinfo->drawn_frames[i].drawing, w, h);
