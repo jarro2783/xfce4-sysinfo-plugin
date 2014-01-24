@@ -565,12 +565,18 @@ sysinfo_free(SysinfoInstance* sysinfo)
 }
 
 static void
+config_response_cb(GtkWidget* dlg, gint response, SysinfoInstance* sysinfo)
+{
+  gtk_widget_destroy(dlg);
+  xfce_panel_plugin_unblock_menu(sysinfo->plugin);
+}
+
+static void
 configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkWidget* dlg;
 
-  //enable this once we know it all works
-  //xfce_panel_plugin_block_menu(plugin);
+  xfce_panel_plugin_block_menu(plugin);
 
   dlg = xfce_titled_dialog_new_with_buttons("System Info Properties",
     GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(plugin))),
@@ -579,6 +585,8 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     GTK_RESPONSE_OK,
     NULL
   );
+
+  g_signal_connect(dlg, "response", G_CALLBACK(config_response_cb), sysinfo);
 
   gtk_widget_show(dlg);
 }
