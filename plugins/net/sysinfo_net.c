@@ -127,7 +127,8 @@ collect_data(NetData* data)
 }
 
 static void
-get_range(double min, double max, double* display_min, double* display_max)
+get_range(SysinfoPlugin* plugin,
+  double min, double max, double* display_min, double* display_max)
 {
   //scale based on the max
   //for max = x.y E z, we go to x + 1 E z
@@ -165,6 +166,12 @@ close(SysinfoPlugin* plugin)
   g_free(data->current);
   g_free(data->last);
   g_free(data->rate);
+
+  g_free(data);
+
+  g_free(plugin->colors);
+
+  g_free(plugin);
 }
 
 static NetData*
@@ -199,6 +206,10 @@ net_get_tooltip(SysinfoPlugin* plugin)
     "== Network Traffic ==\nIn: %s/s\nOut: %s/s\nLocal: %s/s",
     in, out, local
   );
+
+  g_free(in);
+  g_free(out);
+  g_free(local);
 
   return data->tooltip;
 }

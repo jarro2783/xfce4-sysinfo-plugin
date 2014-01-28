@@ -107,6 +107,7 @@ cpu_get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
 static void 
 cpu_get_range
 (
+  SysinfoPlugin* plugin,
   double min, 
   double max, 
   double* display_min, 
@@ -149,6 +150,8 @@ cpu_close(SysinfoPlugin* plugin)
   g_free(data->percentages);
 
   g_free(data);
+
+  g_free(plugin->colors);
 
   g_free(plugin);
 }

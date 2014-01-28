@@ -133,7 +133,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   double min = 0;
   double max = 100;
-  frame->plugin->get_range(0, frame->history_max, &min, &max);
+  frame->plugin->get_range(plugin, 0, frame->history_max, &min, &max);
 
   double range = max - min;
   double scale = height / range;

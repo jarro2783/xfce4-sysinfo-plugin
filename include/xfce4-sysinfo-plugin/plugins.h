@@ -58,7 +58,7 @@ struct sysinfoplugin
 
   //get the range to display given the minimum and maximum values that have
   //been seen in the history
-  void (*get_range)(double min, double max, 
+  void (*get_range)(SysinfoPlugin*, double min, double max, 
         double* display_min, double* display_max);
 
   //get the tooltip text
