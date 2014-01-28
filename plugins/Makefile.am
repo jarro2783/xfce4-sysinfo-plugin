@@ -1,1 +1,1 @@
-SUBDIRS = cpu net
+SUBDIRS = cpu net mem

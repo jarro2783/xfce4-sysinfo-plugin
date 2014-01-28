@@ -28,6 +28,7 @@ AC_CONFIG_FILES([Makefile
                  plugins/Makefile
                  plugins/cpu/Makefile
                  plugins/net/Makefile
+                 plugins/mem/Makefile
                  include/Makefile
                  include/xfce4-sysinfo-plugin/Makefile
                 ])
