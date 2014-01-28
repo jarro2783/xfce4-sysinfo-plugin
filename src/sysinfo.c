@@ -572,9 +572,50 @@ config_response_cb(GtkWidget* dlg, gint response, SysinfoInstance* sysinfo)
 }
 
 static void
+make_sys_configuration(GtkBox* c)
+{
+  GtkWidget* update_row = gtk_hbox_new(FALSE, 0);
+
+  gtk_box_pack_start(c, update_row, FALSE, FALSE, 0);
+
+  GtkWidget* update_text = gtk_label_new("Update interval:");
+
+  gtk_box_pack_start(GTK_BOX(update_row), update_text, FALSE, FALSE, 10);
+
+  GtkWidget* update_intervals = gtk_combo_box_text_new();
+
+  gchar* intervals[] = 
+    {
+      "250ms",
+      "500ms",
+      "750ms",
+      "1000ms",
+      NULL
+    };
+
+  int i = 0;
+  while (intervals[i])
+  {
+    gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(update_intervals), 
+      intervals[i]);
+    ++i;
+  }
+
+  gtk_box_pack_start(GTK_BOX(update_row), update_intervals, FALSE, FALSE, 0);
+  gtk_combo_box_set_active(GTK_COMBO_BOX(update_intervals), 0);
+
+  //make the tree view
+  //loop through every plugin and make an entry for it
+}
+
+static void
 configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkWidget* dlg;
+  GtkWidget* book;
+  GtkWidget* front_child;
+  GtkWidget* front_label;
+  GtkWidget* content_area;
 
   xfce_panel_plugin_block_menu(plugin);
 
@@ -588,7 +629,19 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
   g_signal_connect(dlg, "response", G_CALLBACK(config_response_cb), sysinfo);
 
-  gtk_widget_show(dlg);
+  content_area = gtk_dialog_get_content_area(GTK_DIALOG(dlg));
+
+  front_child = gtk_vbox_new(FALSE, 0);
+  book = gtk_notebook_new();
+  front_label = gtk_label_new("Sysinfo");
+
+  gtk_notebook_append_page(GTK_NOTEBOOK(book), front_child, front_label);
+
+  gtk_container_add(GTK_CONTAINER(content_area), book); 
+
+  make_sys_configuration(GTK_BOX(front_child));
+
+  gtk_widget_show_all(dlg);
 }
 
 static void
