@@ -33,8 +33,9 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 //#define TOOLTIP_DEBUG
 
 typedef struct sysinfoinstance SysinfoInstance;
+typedef struct framedata FrameData;
 
-typedef struct
+struct framedata
 {
   SysinfoInstance* sysinfo;
 
@@ -61,7 +62,11 @@ typedef struct
 
   //maximum of sliding window data
   GQueue* slidingqueue;
-} FrameData;
+
+  gboolean shown;
+
+  FrameData* nextframe;
+};
 
 struct sysinfoinstance
 {
@@ -294,6 +299,48 @@ resize_drawing(GtkWidget* w, GdkRectangle* alloc, FrameData* f)
 }
 
 static void
+setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
+{
+  GtkWidget* frame = gtk_frame_new(NULL);
+  GtkWidget* drawing = gtk_drawing_area_new();
+  //GtkWidget* drawing = gtk_label_new("Hello world");
+
+  gtk_container_add(GTK_CONTAINER(frame), drawing);
+  gtk_box_pack_end(box, frame, TRUE, TRUE, 0);
+
+  fd->frame = frame;
+  fd->drawing = drawing;
+
+  g_signal_connect_after(G_OBJECT(drawing), "expose-event",
+                   G_CALLBACK(draw_graph_cb), fd);
+
+  //connect the resized event
+  g_signal_connect_after(
+    G_OBJECT(drawing), 
+    "size-allocate",
+    G_CALLBACK(resize_drawing), fd
+  );
+
+  fd->plugin = plugin;
+  fd->history = g_new0(double*, plugin->num_data);
+
+  //allocate a history for each component of the data
+  size_t j = 0;
+  while (j != plugin->num_data)
+  {
+    fd->slidingqueue = g_queue_new();
+    ++j;
+  }
+
+  gtk_widget_set_has_tooltip(drawing, TRUE);
+  fd->tooltip_text = gtk_label_new(NULL);
+  g_object_ref(fd->tooltip_text);
+  g_signal_connect(drawing, "query-tooltip", G_CALLBACK(tooltip_cb), fd);
+
+  fd->shown = TRUE;
+}
+
+static void
 construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkOrientation orientation = xfce_panel_plugin_get_orientation(plugin);
@@ -315,54 +362,24 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
   sysinfo->num_displayed = num_plugins;
 
-  sysinfo->drawn_frames = g_new0(FrameData, num_plugins);
-
   fprintf(stderr, "opened %zu plugins\n", num_plugins);
+
+  FrameData* head = 0;
 
   while (i != num_plugins)
   {
-    FrameData* fd = &sysinfo->drawn_frames[i];
-
-    GtkWidget* frame = gtk_frame_new(NULL);
-    GtkWidget* drawing = gtk_drawing_area_new();
-    //GtkWidget* drawing = gtk_label_new("Hello world");
-
-    gtk_container_add(GTK_CONTAINER(frame), drawing);
-    gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), frame, TRUE, TRUE, 0);
-
-    fd->frame = frame;
-    fd->drawing = drawing;
-
-    g_signal_connect_after(G_OBJECT(drawing), "expose-event",
-                     G_CALLBACK(draw_graph_cb), fd);
-
-    //connect the resized event
-    g_signal_connect_after(
-      G_OBJECT(drawing), 
-      "size-allocate",
-      G_CALLBACK(resize_drawing), fd
-    );
-                     
-
+    FrameData* fd = g_slice_new0(FrameData);
     SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
-    fd->plugin = plugin;
-    fd->history = g_new0(double*, plugin->num_data);
 
-    //allocate a history for each component of the data
-    size_t j = 0;
-    while (j != plugin->num_data)
-    {
-      fd->slidingqueue = g_queue_new();
-      ++j;
-    }
+    setup_frame(GTK_BOX(sysinfo->hvbox), fd, plugin);
 
-    gtk_widget_set_has_tooltip(drawing, TRUE);
-    fd->tooltip_text = gtk_label_new(NULL);
-    g_object_ref(fd->tooltip_text);
-    g_signal_connect(drawing, "query-tooltip", G_CALLBACK(tooltip_cb), fd);
+    fd->nextframe = head;
+    head = fd;
 
     ++i;
   }
+
+  sysinfo->drawn_frames = head;
 
   gtk_widget_show_all(sysinfo->top);
 }
@@ -455,12 +472,15 @@ update_frame(FrameData* frame)
 static gboolean
 update(SysinfoInstance* sysinfo)
 {
-  size_t i = 0;
-  while (i != sysinfo->num_displayed)
+  FrameData* frame = sysinfo->drawn_frames;
+  while (frame != 0)
   {
-    update_frame(&sysinfo->drawn_frames[i]);
-    gtk_widget_queue_draw(sysinfo->drawn_frames[i].drawing);
-    ++i;
+    if (frame->shown)
+    {
+      update_frame(frame);
+      gtk_widget_queue_draw(frame->drawing);
+    }
+    frame = frame->nextframe;
   }
 
   return TRUE;
@@ -514,17 +534,14 @@ size_changed_cb
     h = DEFAULT_HEIGHT;
   }
 
-  FrameData* frames = sysinfo->drawn_frames;
-  
-  size_t i = 0;
-  while (i != sysinfo->num_displayed)
+  FrameData* frame = sysinfo->drawn_frames;
+  while (frame != 0)
   {
-    FrameData* f = &frames[i];
     //gtk_widget_set_size_request (GTK_WIDGET(plugin), w, h);
-    gtk_widget_set_size_request (f->frame, w, h);
-    //gtk_widget_set_size_request (sysinfo->drawn_frames[i].drawing, w, h);
+    gtk_widget_set_size_request (frame->frame, w, h);
+    //gtk_widget_set_size_request (frame->drawing, w, h);
 
-    ++i;
+    frame = frame->nextframe;
   }
 
 
