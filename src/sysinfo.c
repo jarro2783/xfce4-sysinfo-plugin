@@ -352,6 +352,8 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
   fd->tooltip_text = gtk_label_new(NULL);
   g_object_ref(fd->tooltip_text);
   g_signal_connect(drawing, "query-tooltip", G_CALLBACK(tooltip_cb), fd);
+ 
+  //xfce_panel_plugin_add_action_widget(fd->sysinfo->plugin, fd->frame);
 
   fd->shown = TRUE;
 }
@@ -712,6 +714,8 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
   }
 
   GtkWidget* tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+
+  gtk_tree_view_set_reorderable(GTK_TREE_VIEW(tree), TRUE);
 
   gtk_box_pack_start(c, tree, FALSE, FALSE, 10);
 
