@@ -165,8 +165,8 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   int nextbase = base;
   int x = width - num_items;
-  fprintf(stderr, "%s: drawing %d items from %d\n", frame->plugin->plugin_name,
-    num_items, x);
+  //fprintf(stderr, "%s: drawing %d items from %d\n", frame->plugin->plugin_name,
+  //  num_items, x);
   while (i != frame->history_end && i != frame->history_size)
   {
     nextbase = base;
@@ -378,7 +378,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
   sysinfo->num_displayed = num_plugins;
 
-  fprintf(stderr, "opened %zu plugins\n", num_plugins);
+  //fprintf(stderr, "opened %zu plugins\n", num_plugins);
 
   FrameData* head = 0;
 
@@ -533,7 +533,7 @@ size_changed_cb
   SysinfoInstance* sysinfo
 )
 {
-  fprintf(stderr, "size changed to %d\n", size);
+  //fprintf(stderr, "size changed to %d\n", size);
   GtkOrientation orientation;
 
   orientation = xfce_panel_plugin_get_orientation (plugin);
