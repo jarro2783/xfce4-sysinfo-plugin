@@ -157,7 +157,7 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   //the drawing area needs to be scaled appropriately
 
   int slices = frame->history_end - frame->history_start;
-  slices = slices <= 0 ? slices + frame->history_size : slices;
+  slices = slices < 0 ? slices + frame->history_size : slices;
   int num_items = width < slices ? width : slices;
 
   int i = (frame->history_end - num_items);
@@ -165,6 +165,8 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   int nextbase = base;
   int x = width - num_items;
+  fprintf(stderr, "%s: drawing %d items from %d\n", frame->plugin->plugin_name,
+    num_items, x);
   while (i != frame->history_end && i != frame->history_size)
   {
     nextbase = base;
@@ -271,6 +273,9 @@ resize_drawing(GtkWidget* w, GdkRectangle* alloc, FrameData* f)
 {
   //reallocate history here now that we have the actual size of the drawing
 
+  fprintf(stderr, "reallocated size %d x %d to %s\n", alloc->width, 
+    alloc->height, f->plugin->plugin_name);
+
   gint hw = alloc->width + 1;
   SysinfoPlugin* p = f->plugin;
 
@@ -357,7 +362,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   gtk_event_box_set_visible_window(GTK_EVENT_BOX(sysinfo->top), FALSE);
   gtk_event_box_set_above_child(GTK_EVENT_BOX(sysinfo->top), TRUE);
 
-  xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
+  //xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
 
   gtk_container_add(GTK_CONTAINER(plugin), sysinfo->top);
 
@@ -525,6 +530,7 @@ size_changed_cb
   SysinfoInstance* sysinfo
 )
 {
+  fprintf(stderr, "size changed to %d\n", size);
   GtkOrientation orientation;
 
   orientation = xfce_panel_plugin_get_orientation (plugin);
