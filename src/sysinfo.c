@@ -35,6 +35,13 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 typedef struct sysinfoinstance SysinfoInstance;
 typedef struct framedata FrameData;
 
+enum
+{
+  CONFIG_COL_ENABLED,
+  CONFIG_COL_NAME,
+  CONFIG_NUM_COLS
+};
+
 struct framedata
 {
   SysinfoInstance* sysinfo;
@@ -569,14 +576,19 @@ sysinfo_free(SysinfoInstance* sysinfo)
     ++i;
   }
 
-  g_slice_free(SysinfoInstance, sysinfo);
-
-  i = 0;
-  while (i != sysinfo->num_displayed)
+  FrameData* fd = sysinfo->drawn_frames;
+  FrameData* old;
+  while (fd != 0)
   {
-    cleanup_frame(&sysinfo->drawn_frames[i]);
-    ++i;
+    cleanup_frame(fd);
+
+    old = fd;
+    fd = fd->nextframe;
+
+    g_slice_free(FrameData, old);
   }
+
+  g_slice_free(SysinfoInstance, sysinfo);
 
   glibtop_close();
 }
@@ -589,7 +601,7 @@ config_response_cb(GtkWidget* dlg, gint response, SysinfoInstance* sysinfo)
 }
 
 static void
-make_sys_configuration(GtkBox* c)
+make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 {
   GtkWidget* update_row = gtk_hbox_new(FALSE, 0);
 
@@ -623,6 +635,51 @@ make_sys_configuration(GtkBox* c)
 
   //make the tree view
   //loop through every plugin and make an entry for it
+  FrameData* frame = sysinfo->drawn_frames;
+
+  GtkListStore* store = gtk_list_store_new(
+    CONFIG_NUM_COLS, 
+    G_TYPE_BOOLEAN, 
+    G_TYPE_STRING
+  );
+
+  GtkTreeIter iter;
+  
+  while (frame != 0)
+  {
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(
+      store, &iter,
+      CONFIG_COL_ENABLED, TRUE,
+      CONFIG_COL_NAME, frame->plugin->plugin_name,
+      -1
+    );
+
+    frame = frame->nextframe;
+  }
+
+  GtkWidget* tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+
+  gtk_box_pack_start(c, tree, FALSE, FALSE, 10);
+
+  GtkCellRenderer* renderer;
+  GtkTreeViewColumn* column;
+
+  renderer = gtk_cell_renderer_toggle_new();
+  column = gtk_tree_view_column_new_with_attributes(
+    "Enabled", renderer,
+    "active", CONFIG_COL_ENABLED,
+    NULL);
+
+  gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+  
+  renderer = gtk_cell_renderer_text_new();
+  column = gtk_tree_view_column_new_with_attributes(
+    "Name", renderer,
+    "text", CONFIG_COL_NAME, 
+    NULL);
+
+  gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 }
 
 static void
@@ -656,7 +713,7 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
   gtk_container_add(GTK_CONTAINER(content_area), book); 
 
-  make_sys_configuration(GTK_BOX(front_child));
+  make_sys_configuration(GTK_BOX(front_child), sysinfo);
 
   gtk_widget_show_all(dlg);
 }
