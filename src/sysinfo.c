@@ -39,6 +39,7 @@ enum
 {
   CONFIG_COL_ENABLED,
   CONFIG_COL_NAME,
+  CONFIG_COL_FRAME_PTR,
   CONFIG_NUM_COLS
 };
 
@@ -601,6 +602,45 @@ config_response_cb(GtkWidget* dlg, gint response, SysinfoInstance* sysinfo)
 }
 
 static void
+config_toggle_enabled
+(
+  GtkCellRendererToggle* renderer,
+  gchar* path,
+  GtkTreeModel* model
+)
+{
+  GtkTreeIter iter;
+  gtk_tree_model_get_iter_from_string(model, &iter, path);
+
+  gboolean enabled;
+  gtk_tree_model_get(
+    model, 
+    &iter, 
+    CONFIG_COL_ENABLED,
+    &enabled
+  );
+
+  enabled = !enabled;
+
+  gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+    CONFIG_COL_ENABLED, enabled,
+    -1);
+
+  FrameData* fd;
+
+  gtk_tree_model_get(
+    model,
+    &iter,
+    CONFIG_COL_FRAME_PTR,
+    &fd
+  );
+
+  fd->shown = enabled;
+
+  gtk_widget_set_visible(fd->frame, enabled);
+}
+
+static void
 make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 {
   GtkWidget* update_row = gtk_hbox_new(FALSE, 0);
@@ -640,7 +680,8 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
   GtkListStore* store = gtk_list_store_new(
     CONFIG_NUM_COLS, 
     G_TYPE_BOOLEAN, 
-    G_TYPE_STRING
+    G_TYPE_STRING,
+    G_TYPE_POINTER
   );
 
   GtkTreeIter iter;
@@ -652,6 +693,7 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
       store, &iter,
       CONFIG_COL_ENABLED, TRUE,
       CONFIG_COL_NAME, frame->plugin->plugin_name,
+      CONFIG_COL_FRAME_PTR, frame,
       -1
     );
 
@@ -670,6 +712,9 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
     "Enabled", renderer,
     "active", CONFIG_COL_ENABLED,
     NULL);
+
+  g_signal_connect(renderer, "toggled", G_CALLBACK(&config_toggle_enabled), 
+    store);
 
   gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
   
