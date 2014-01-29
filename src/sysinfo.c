@@ -273,11 +273,14 @@ resize_drawing(GtkWidget* w, GdkRectangle* alloc, FrameData* f)
 {
   //reallocate history here now that we have the actual size of the drawing
 
-  fprintf(stderr, "reallocated size %d x %d to %s\n", alloc->width, 
-    alloc->height, f->plugin->plugin_name);
-
   gint hw = alloc->width + 1;
   SysinfoPlugin* p = f->plugin;
+
+  if (hw == f->history_size)
+  {
+    //it got resized to the same, so we have nothing to do
+    return ;
+  }
 
   size_t j = 0;
   while (j != p->num_data)
