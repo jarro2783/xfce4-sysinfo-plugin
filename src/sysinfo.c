@@ -606,33 +606,35 @@ config_toggle_enabled
 (
   GtkCellRendererToggle* renderer,
   gchar* path,
-  GtkTreeModel* model
+  GtkListStore* model
 )
 {
   GtkTreeIter iter;
-  gtk_tree_model_get_iter_from_string(model, &iter, path);
+  gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(model), &iter, path);
 
   gboolean enabled;
   gtk_tree_model_get(
-    model, 
+    GTK_TREE_MODEL(model), 
     &iter, 
     CONFIG_COL_ENABLED,
-    &enabled
+    &enabled,
+    -1
   );
 
   enabled = !enabled;
 
-  gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+  gtk_list_store_set(model, &iter,
     CONFIG_COL_ENABLED, enabled,
     -1);
 
   FrameData* fd;
 
   gtk_tree_model_get(
-    model,
+    GTK_TREE_MODEL(model),
     &iter,
     CONFIG_COL_FRAME_PTR,
-    &fd
+    &fd,
+    -1
   );
 
   fd->shown = enabled;
