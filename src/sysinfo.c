@@ -321,6 +321,9 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
   GtkWidget* drawing = gtk_drawing_area_new();
   //GtkWidget* drawing = gtk_label_new("Hello world");
 
+  //we own a reference to the frame
+  g_object_ref(frame);
+
   gtk_container_add(GTK_CONTAINER(frame), drawing);
   gtk_box_pack_end(box, frame, TRUE, TRUE, 0);
 
