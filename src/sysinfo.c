@@ -654,6 +654,28 @@ config_toggle_enabled
 }
 
 static void
+drag_data_inserted_cb
+(
+  GtkTreeModel* model,
+  GtkTreePath* path,
+  GtkTreeIter* iter,
+  SysinfoInstance* sysinfo
+)
+{
+}
+
+static void
+drag_data_changed_cb
+(
+  GtkTreeModel* model,
+  GtkTreePath* path,
+  GtkTreeIter* iter,
+  SysinfoInstance* sysinfo
+)
+{
+}
+
+static void
 make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 {
   GtkWidget* update_row = gtk_hbox_new(FALSE, 0);
@@ -740,6 +762,12 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
     NULL);
 
   gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
+
+  //connect the row change signals
+  g_signal_connect(GTK_WIDGET(store), "row-inserted", 
+    G_CALLBACK(&drag_data_inserted_cb), sysinfo);
+  g_signal_connect(GTK_WIDGET(store), "row-changed", 
+    G_CALLBACK(&drag_data_changed_cb), sysinfo);
 }
 
 static void
