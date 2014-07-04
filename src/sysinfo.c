@@ -507,6 +507,11 @@ update(SysinfoInstance* sysinfo)
   return TRUE;
 }
 
+static void
+read_config(SysinfoInstance* sysinfo)
+{
+}
+
 static SysinfoInstance*
 sysinfo_construct(XfcePanelPlugin* plugin)
 {
@@ -521,6 +526,8 @@ sysinfo_construct(XfcePanelPlugin* plugin)
   sysinfo->plugin_list = sysinfo_load_plugins();
 
   construct_gui(plugin, sysinfo);
+
+  read_config(sysinfo);
 
   //do one update
   update(sysinfo);
@@ -746,6 +753,25 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 }
 
 static void
+add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
+{
+  GtkWidget* page;
+  GtkWidget* page_label;
+
+  FrameData* frame = sysinfo->drawn_frames;
+
+  while (frame != 0)
+  {
+    page = gtk_vbox_new(FALSE, 0);
+
+    page_label = gtk_label_new(frame->plugin->plugin_name);
+    gtk_notebook_append_page(book, page, page_label);
+
+    frame = frame->nextframe;
+  }
+}
+
+static void
 configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   GtkWidget* dlg;
@@ -777,6 +803,8 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   gtk_container_add(GTK_CONTAINER(content_area), book); 
 
   make_sys_configuration(GTK_BOX(front_child), sysinfo);
+
+  add_plugin_pages(GTK_NOTEBOOK(book), sysinfo);
 
   gtk_widget_show_all(dlg);
 }
