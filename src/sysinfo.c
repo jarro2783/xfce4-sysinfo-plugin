@@ -783,28 +783,45 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 }
 
 static void
+color_changed_cb(GtkColorButton* widget, SysinfoConfigColor* color)
+{
+  SysinfoColor* c = &color->plugin->colors[color->which];
+
+  GdkColor result;
+  gtk_color_button_get_color(widget, &result);
+
+  c->red = result.red / 65535.;
+  c->green = result.green / 65535.;
+  c->blue = result.blue / 65535.;
+}
+
+static void
 add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
 {
   GtkWidget* page;
   GtkWidget* page_label;
+  GtkWidget *color_table;
 
   FrameData* frame = sysinfo->drawn_frames;
 
   while (frame != 0)
   {
-    page = gtk_vbox_new(FALSE, 0);
+    //make a vertical list of colour names and a colour picker
+    //so we need a vbox
+    GtkWidget* color_label = 0;
+    GtkWidget* color_button = 0;
+    SysinfoPlugin* plugin = frame->plugin;
+
+    color_table = gtk_table_new(2, plugin->num_data, FALSE);
+
+    page = color_table; //gtk_alignment_new(1, 0, 0, 0);
+    //gtk_container_add(GTK_CONTAINER(page), color_table);
 
     page_label = gtk_label_new(frame->plugin->plugin_name);
     gtk_notebook_append_page(book, page, page_label);
 
     //fill each page with the data for that plugin
     //so far we only do colour
-
-    //make a vertical list of colour names and a colour picker
-    //so we need a vbox
-    GtkWidget* color_label = 0;
-    GtkWidget* color_button = 0;
-    SysinfoPlugin* plugin = frame->plugin;
 
     int i = 0;
     while (i != plugin->num_data)
@@ -818,11 +835,18 @@ add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
 
       color_label = gtk_label_new(plugin->data_names[i]);
 
-      gtk_box_pack_start(GTK_BOX(page), color_label, FALSE, FALSE, 0);
+      gtk_table_attach(GTK_TABLE(page), color_label, 
+        i, i + 1, 0, 1,
+        0, 0, 6, 3);
 
       color_button = gtk_color_button_new_with_color(&color);
 
-      gtk_box_pack_start(GTK_BOX(page), color_button, FALSE, FALSE, 0);
+      g_signal_connect (G_OBJECT(color_button), "color-set",
+        G_CALLBACK (color_changed_cb), &plugin->color_config[i]);
+
+      gtk_table_attach(GTK_TABLE(page), color_button, 
+        i, i + 1, 1, 2,
+        0, 0, 6, 3);
 
       color_label = 0;
       ++i;

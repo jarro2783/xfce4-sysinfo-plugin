@@ -43,12 +43,20 @@ typedef struct
   double blue;
 } SysinfoColor;
 
+typedef struct
+{
+  int which;
+  SysinfoPlugin* plugin;
+} SysinfoConfigColor;
+
 struct sysinfoplugin
 {
   gchar* plugin_name;
   int num_data;
   gchar** data_names;
   SysinfoColor* colors;
+
+  SysinfoConfigColor* color_config;
 
   //data private to the plugin
   void* plugin_data;

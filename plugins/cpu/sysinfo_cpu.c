@@ -42,8 +42,8 @@ static gchar* data_names[DATA_FIELDS] =
   {
     "Nice",
     "System",
-    "IO Wait"
-    "User",
+    "IO Wait",
+    "User"
   };
 
 typedef struct

@@ -37,6 +37,20 @@ struct sysinfopluginlist
   size_t num_plugins;
 };
 
+static void
+init_color_config(SysinfoPlugin* plugin)
+{
+  plugin->color_config = g_new(SysinfoConfigColor, plugin->num_data);
+
+  int i = 0;
+  while (i != plugin->num_data)
+  {
+    plugin->color_config[i].which = i;
+    plugin->color_config[i].plugin = plugin;
+    ++i;
+  }
+}
+
 SysinfoPluginList*
 sysinfo_pluginlist_new()
 {
@@ -73,6 +87,8 @@ sysinfo_load_plugins()
 
       if (plugin != 0)
       {
+        //initialise the color config pointers
+        init_color_config(plugin);
         sysinfo_pluginlist_append(list, plugin);
       }
     }
@@ -142,3 +158,5 @@ sysinfo_pluginlist_append(SysinfoPluginList* list, SysinfoPlugin* plugin)
   list->plugins[list->num_plugins] = plugin;
   ++list->num_plugins;
 }
+
+
