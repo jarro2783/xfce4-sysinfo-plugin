@@ -29,6 +29,8 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 #define DEFAULT_WIDTH 60
 #define DEFAULT_HEIGHT 40
 
+#define COLOR_F_TO_16(c) (c * 65535)
+
 //define this for extra debugging in tooltips
 //#define TOOLTIP_DEBUG
 
@@ -794,6 +796,37 @@ add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
 
     page_label = gtk_label_new(frame->plugin->plugin_name);
     gtk_notebook_append_page(book, page, page_label);
+
+    //fill each page with the data for that plugin
+    //so far we only do colour
+
+    //make a vertical list of colour names and a colour picker
+    //so we need a vbox
+    GtkWidget* color_label = 0;
+    GtkWidget* color_button = 0;
+    SysinfoPlugin* plugin = frame->plugin;
+
+    int i = 0;
+    while (i != plugin->num_data)
+    {
+      GdkColor color = {
+        0,
+        COLOR_F_TO_16(plugin->colors[i].red), 
+        COLOR_F_TO_16(plugin->colors[i].green),
+        COLOR_F_TO_16(plugin->colors[i].blue)
+        };
+
+      color_label = gtk_label_new(plugin->data_names[i]);
+
+      gtk_box_pack_start(GTK_BOX(page), color_label, FALSE, FALSE, 0);
+
+      color_button = gtk_color_button_new_with_color(&color);
+
+      gtk_box_pack_start(GTK_BOX(page), color_button, FALSE, FALSE, 0);
+
+      color_label = 0;
+      ++i;
+    }
 
     frame = frame->nextframe;
   }
