@@ -91,6 +91,11 @@ struct sysinfoinstance
   guint timeout_id;
 };
 
+typedef struct
+{
+  SysinfoInstance* sysinfo;
+} ConfigDialogData;
+
 static inline int
 draw_one_point
 (
@@ -623,10 +628,12 @@ sysinfo_free(SysinfoInstance* sysinfo)
 }
 
 static void
-config_response_cb(GtkWidget* dlg, gint response, SysinfoInstance* sysinfo)
+config_response_cb(GtkWidget* dlg, gint response, ConfigDialogData* data)
 {
   gtk_widget_destroy(dlg);
-  xfce_panel_plugin_unblock_menu(sysinfo->plugin);
+  xfce_panel_plugin_unblock_menu(data->sysinfo->plugin);
+
+  g_free(data);
 }
 
 static void
@@ -899,6 +906,7 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   GtkWidget* front_child;
   GtkWidget* front_label;
   GtkWidget* content_area;
+  ConfigDialogData* config_data;
 
   xfce_panel_plugin_block_menu(plugin);
 
@@ -910,7 +918,11 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     NULL
   );
 
-  g_signal_connect(dlg, "response", G_CALLBACK(config_response_cb), sysinfo);
+  config_data = g_new0(ConfigDialogData, 1);
+  config_data->sysinfo = sysinfo;
+
+  g_signal_connect(dlg, "response", G_CALLBACK(config_response_cb), 
+    config_data);
 
   content_area = gtk_dialog_get_content_area(GTK_DIALOG(dlg));
 
