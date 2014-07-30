@@ -132,9 +132,9 @@ mem_get_tooltip(SysinfoPlugin* plugin)
 }
 
 static void
-init_color(SysinfoPlugin* plugin)
+mem_reset_colors(SysinfoPlugin* plugin)
 {
-  SysinfoColor* c = g_new0(SysinfoColor, DATA_FIELDS);
+  SysinfoColor* c = plugin->colors;
 
   c[MEM_FREE].red = 0;
   c[MEM_FREE].green = 0;
@@ -151,8 +151,16 @@ init_color(SysinfoPlugin* plugin)
   c[MEM_CACHED].red = 0xaa / 255.;
   c[MEM_CACHED].green = 0xf5 / 255.;
   c[MEM_CACHED].blue = 0xd0 / 255.;
+}
+
+static void
+init_color(SysinfoPlugin* plugin)
+{
+  SysinfoColor* c = g_new0(SysinfoColor, DATA_FIELDS);
 
   plugin->colors = c;
+
+  mem_reset_colors(plugin);
 }
 
 SysinfoPlugin*
@@ -176,6 +184,7 @@ sysinfo_data_plugin_init()
   plugin->get_data = &mem_get_data;
   plugin->close = &mem_close;
   plugin->get_range = &mem_get_range;
+  plugin->reset_colors = &mem_reset_colors;
   plugin->get_tooltip = &mem_get_tooltip;
 
   return plugin;

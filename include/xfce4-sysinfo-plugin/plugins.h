@@ -72,6 +72,8 @@ struct sysinfoplugin
   //get the tooltip text
   gchar* (*get_tooltip)(SysinfoPlugin*);
 
+  void (*reset_colors)(SysinfoPlugin*);
+
   //close the plugin
   void (*close)(SysinfoPlugin*);
 };

@@ -161,9 +161,9 @@ cpu_close(SysinfoPlugin* plugin)
 }
 
 static void
-init_color(SysinfoPlugin* plugin)
+cpu_reset_colors(SysinfoPlugin* plugin)
 {
-  SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
+  SysinfoColor* c = plugin->colors;
 
   c[CPU_IDLE].red = 0;
   c[CPU_IDLE].green = 0;
@@ -184,8 +184,16 @@ init_color(SysinfoPlugin* plugin)
   c[CPU_USER].red = 0x00 / 255.;
   c[CPU_USER].green = 0x72 / 255.;
   c[CPU_USER].blue = 0xb3 / 255.;
+}
+
+static void
+init_color(SysinfoPlugin* plugin)
+{
+  SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
 
   plugin->colors = c;
+
+  cpu_reset_colors(plugin);
 }
 
 SysinfoPlugin*
@@ -214,6 +222,7 @@ sysinfo_data_plugin_init()
   plugin->get_data = &cpu_get_data;
   plugin->get_range = &cpu_get_range;
   plugin->get_tooltip = &cpu_get_tooltip;
+  plugin->reset_colors = &cpu_reset_colors;
   plugin->close = &cpu_close;
 
   return plugin;

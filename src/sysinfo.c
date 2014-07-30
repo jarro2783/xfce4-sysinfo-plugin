@@ -801,29 +801,59 @@ color_changed_cb(GtkColorButton* widget, SysinfoConfigColor* color)
 }
 
 static void
+reset_button_cb(GtkButton* widget, SysinfoPlugin* plugin)
+{
+  plugin->reset_colors(plugin);
+
+  // now reset the actual color buttons
+}
+
+static void
 add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
 {
-  GtkWidget* page;
-  GtkWidget* page_label;
-  GtkWidget *color_table;
 
   FrameData* frame = sysinfo->drawn_frames;
 
   while (frame != 0)
   {
-    //make a vertical list of colour names and a colour picker
-    //so we need a vbox
+    //make a horizontal list of colour names and a colour picker
+    //with a reset button underneath
+    GtkWidget* page;
+    GtkWidget* page_vbox;
+    GtkWidget* page_label;
+    GtkWidget* color_table;
+    GtkWidget* table_hbox;
+
+    GtkWidget* reset_button;
+    GtkWidget* reset_hbox;
+
     GtkWidget* color_label = 0;
     GtkWidget* color_button = 0;
+
     SysinfoPlugin* plugin = frame->plugin;
 
-    color_table = gtk_table_new(2, plugin->num_data, FALSE);
+    page_vbox = gtk_vbox_new(FALSE, 0);
 
-    page = color_table; //gtk_alignment_new(1, 0, 0, 0);
-    //gtk_container_add(GTK_CONTAINER(page), color_table);
+    color_table = gtk_table_new(2, plugin->num_data, FALSE);
+    table_hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(table_hbox), color_table, TRUE, FALSE, 0);
+
+    gtk_box_pack_start(GTK_BOX(page_vbox), table_hbox, FALSE, FALSE, 0);
+
+    reset_button = gtk_button_new_with_label("Reset");
+    reset_hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(reset_hbox), reset_button, TRUE, FALSE, 0);
+
+    gtk_box_pack_start(GTK_BOX(page_vbox), reset_hbox, FALSE, FALSE, 10);
+
+    page = page_vbox;
 
     page_label = gtk_label_new(frame->plugin->plugin_name);
     gtk_notebook_append_page(book, page, page_label);
+
+    //connect the push signal for the reset button
+    g_signal_connect (G_OBJECT(reset_button), "clicked",
+      G_CALLBACK (reset_button_cb), plugin);
 
     //fill each page with the data for that plugin
     //so far we only do colour
@@ -840,7 +870,7 @@ add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
 
       color_label = gtk_label_new(plugin->data_names[i]);
 
-      gtk_table_attach(GTK_TABLE(page), color_label, 
+      gtk_table_attach(GTK_TABLE(color_table), color_label, 
         i, i + 1, 0, 1,
         0, 0, 6, 3);
 
@@ -849,7 +879,7 @@ add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
       g_signal_connect (G_OBJECT(color_button), "color-set",
         G_CALLBACK (color_changed_cb), &plugin->color_config[i]);
 
-      gtk_table_attach(GTK_TABLE(page), color_button, 
+      gtk_table_attach(GTK_TABLE(color_table), color_button, 
         i, i + 1, 1, 2,
         0, 0, 6, 3);
 

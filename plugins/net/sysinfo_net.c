@@ -63,9 +63,9 @@ typedef struct
 } NetData;
 
 static void
-init_color(SysinfoPlugin* plugin)
+net_reset_colors(SysinfoPlugin* plugin)
 {
-  SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
+  SysinfoColor* c = plugin->colors;
 
   c[NET_BACKGROUND].red = 0;
   c[NET_BACKGROUND].green = 0;
@@ -82,8 +82,16 @@ init_color(SysinfoPlugin* plugin)
   c[NET_LOCAL].red = 0xc4 / 255.;
   c[NET_LOCAL].green = 0xa0 / 255.;
   c[NET_LOCAL].blue = 0;
+}
+
+static void
+init_color(SysinfoPlugin* plugin)
+{
+  SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
 
   plugin->colors = c;
+
+  net_reset_colors(plugin);
 }
 
 static void
@@ -240,6 +248,7 @@ sysinfo_data_plugin_init()
   plugin->close = &close;
   plugin->get_data = &get_data;
   plugin->get_range = &get_range;
+  plugin->reset_colors = &net_reset_colors;
   plugin->get_tooltip = &net_get_tooltip;
 
   return plugin;
