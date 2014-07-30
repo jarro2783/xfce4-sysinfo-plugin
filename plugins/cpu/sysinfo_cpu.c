@@ -25,12 +25,15 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include "xfce4-sysinfo-plugin/plugins.h"
 
-#define DATA_FIELDS 4
-#define RECORD_FIELDS 5
+//data for output
+#define DATA_FIELDS 5
+//what we need to record
+#define RECORD_FIELDS 6
 #define TOOLTIP_SIZE 150
 
 enum
 {
+  CPU_IDLE,
   CPU_NICE,
   CPU_SYS,
   CPU_IOWAIT,
@@ -40,6 +43,7 @@ enum
 
 static gchar* data_names[DATA_FIELDS] =
   {
+    "Idle",
     "Nice",
     "System",
     "IO Wait",
@@ -160,6 +164,10 @@ static void
 init_color(SysinfoPlugin* plugin)
 {
   SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
+
+  c[CPU_IDLE].red = 0;
+  c[CPU_IDLE].green = 0;
+  c[CPU_IDLE].blue = 0;
 
   c[CPU_NICE].red = 0x00 / 255.;
   c[CPU_NICE].green = 0xa3 / 255.;

@@ -26,13 +26,14 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include "xfce4-sysinfo-plugin/plugins.h"
 
-#define DATA_FIELDS 3
+#define DATA_FIELDS 4
 #define TOOLTIP_SIZE 300
 
 static double logscale;
 
 enum
 {
+  NET_BACKGROUND,
   NET_IN,
   NET_OUT,
   NET_LOCAL
@@ -40,6 +41,7 @@ enum
 
 static gchar* data_names[DATA_FIELDS] =
 {
+  "Background",
   "In",
   "Out",
   "Local"
@@ -64,6 +66,10 @@ static void
 init_color(SysinfoPlugin* plugin)
 {
   SysinfoColor* c = g_new(SysinfoColor, DATA_FIELDS);
+
+  c[NET_BACKGROUND].red = 0;
+  c[NET_BACKGROUND].green = 0;
+  c[NET_BACKGROUND].blue = 0;
 
   c[NET_OUT].red = 0xed / 255.;
   c[NET_OUT].green = 0xd4 / 255.;

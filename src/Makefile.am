@@ -8,7 +8,7 @@ tester_SOURCES = tester.c
 
 tester_CFLAGS = \
         -I$(top_srcdir)/include \
-				$(LIBGTOP_CFLAGS)
+				$(LIBGTOP_CFLAGS) -g
 
 tester_LDADD = libsysinfo.la
 

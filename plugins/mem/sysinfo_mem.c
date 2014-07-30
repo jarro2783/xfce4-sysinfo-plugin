@@ -24,11 +24,12 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 #include "xfce4-sysinfo-plugin/plugins.h"
 
-#define DATA_FIELDS 3
+#define DATA_FIELDS 4
 #define TOOLTIP_SIZE 300
 
 enum
 {
+  MEM_FREE,
   MEM_BUFFERS,
   MEM_CACHED,
   MEM_USER
@@ -36,6 +37,7 @@ enum
 
 static gchar* data_names[DATA_FIELDS] =
   {
+    "Free",
     "Buffers",
     "Cached",
     "User"
@@ -133,6 +135,10 @@ static void
 init_color(SysinfoPlugin* plugin)
 {
   SysinfoColor* c = g_new0(SysinfoColor, DATA_FIELDS);
+
+  c[MEM_FREE].red = 0;
+  c[MEM_FREE].green = 0;
+  c[MEM_FREE].blue = 0;
 
   c[MEM_USER].red = 0x00 / 255.;
   c[MEM_USER].green = 0xb3 / 255.;

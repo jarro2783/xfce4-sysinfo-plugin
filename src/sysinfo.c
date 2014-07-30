@@ -128,11 +128,13 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
 
   SysinfoPlugin* plugin = frame->plugin;
 
+  SysinfoColor* bg = &plugin->colors[0];
+
   gint width = w->allocation.width;
   gint height = w->allocation.height;
 
   cairo_rectangle(cr, 0, 0, width, height);
-  cairo_set_source_rgb(cr, 1, 1, 1);
+  cairo_set_source_rgb(cr, bg->red, bg->green, bg->blue);
   cairo_fill(cr);
 
   cairo_set_line_width(cr, 1);
@@ -172,7 +174,8 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
   while (i != frame->history_end && i != frame->history_size)
   {
     nextbase = base;
-    size_t j = 0;
+    //start at 1 to ignore background
+    size_t j = 1;
     while (j != frame->plugin->num_data)
     {
       //draw
@@ -193,7 +196,8 @@ draw_graph_cb(GtkWidget* w, GdkEventExpose* event, FrameData* frame)
     while (i != frame->history_end)
     {
       nextbase = base;
-      size_t j = 0;
+      //start plugin at 1 because we don't count background
+      size_t j = 1;
       while (j != frame->plugin->num_data)
       {
         //draw
@@ -284,7 +288,8 @@ resize_drawing(GtkWidget* w, GdkRectangle* alloc, FrameData* f)
     return ;
   }
 
-  size_t j = 0;
+  //ignore background
+  size_t j = 1;
   while (j != p->num_data)
   {
     if (f->history[j] == NULL)
@@ -346,7 +351,7 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
   fd->history = g_new0(double*, plugin->num_data);
 
   //allocate a history for each component of the data
-  size_t j = 0;
+  size_t j = 1;
   while (j != plugin->num_data)
   {
     fd->slidingqueue = g_queue_new();
@@ -419,8 +424,8 @@ update_history(FrameData* frame, int fields, double* data)
     return;
   }
 
-  //fill the data first
-  size_t i = 0;
+  //fill the data first, start at 1 to ignore background
+  size_t i = 1;
 
   int sum = 0;
   while (i != fields)
