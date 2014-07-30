@@ -816,10 +816,10 @@ reset_button_cb(GtkButton* widget, SysinfoPlugin* plugin)
 }
 
 static void
-add_plugin_pages(GtkNotebook* book, SysinfoInstance* sysinfo)
+add_plugin_pages(GtkNotebook* book, ConfigDialogData* data)
 {
 
-  FrameData* frame = sysinfo->drawn_frames;
+  FrameData* frame = data->sysinfo->drawn_frames;
 
   while (frame != 0)
   {
@@ -936,7 +936,7 @@ configure_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
   make_sys_configuration(GTK_BOX(front_child), sysinfo);
 
-  add_plugin_pages(GTK_NOTEBOOK(book), sysinfo);
+  add_plugin_pages(GTK_NOTEBOOK(book), config_data);
 
   gtk_widget_show_all(dlg);
 }
