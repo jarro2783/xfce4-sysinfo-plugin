@@ -91,9 +91,21 @@ struct sysinfoinstance
   guint timeout_id;
 };
 
+typedef struct pluginpagedata PluginPageData;
+
+struct pluginpagedata
+{
+  int num_colors;
+  GtkColorButton** buttons;
+  SysinfoPlugin* plugin;
+
+  PluginPageData* next;
+};
+
 typedef struct
 {
   SysinfoInstance* sysinfo;
+  PluginPageData* page_data;
 } ConfigDialogData;
 
 static inline int
@@ -630,7 +642,21 @@ sysinfo_free(SysinfoInstance* sysinfo)
 static void
 config_response_cb(GtkWidget* dlg, gint response, ConfigDialogData* data)
 {
+  //free the memory for all the plugin configs
+  PluginPageData* current = data->page_data;
+  PluginPageData* next = 0;
+
+  while (current != 0)
+  {
+    g_free(current->buttons);
+
+    next = current->next;
+    g_free(current);
+    current = next;
+  }
+
   gtk_widget_destroy(dlg);
+
   xfce_panel_plugin_unblock_menu(data->sysinfo->plugin);
 
   g_free(data);
@@ -837,11 +863,30 @@ color_changed_cb(GtkColorButton* widget, SysinfoConfigColor* color)
 }
 
 static void
-reset_button_cb(GtkButton* widget, SysinfoPlugin* plugin)
+set_color_button(GtkColorButton* button, SysinfoPlugin* plugin, int which)
 {
-  plugin->reset_colors(plugin);
+  GdkColor color = {
+    0,
+    COLOR_F_TO_16(plugin->colors[which].red), 
+    COLOR_F_TO_16(plugin->colors[which].green),
+    COLOR_F_TO_16(plugin->colors[which].blue)
+    };
+
+  gtk_color_button_set_color(button, &color);
+}
+
+static void
+reset_button_cb(GtkButton* widget, PluginPageData* page)
+{
+  page->plugin->reset_colors(page->plugin);
 
   // now reset the actual color buttons
+  int i = 0;
+  while (i != page->num_colors)
+  {
+    set_color_button(page->buttons[i], page->plugin, i);
+    ++i;
+  }
 }
 
 static void
@@ -887,22 +932,18 @@ add_plugin_pages(GtkNotebook* book, ConfigDialogData* data)
     page_label = gtk_label_new(frame->plugin->plugin_name);
     gtk_notebook_append_page(book, page, page_label);
 
-    //connect the push signal for the reset button
-    g_signal_connect (G_OBJECT(reset_button), "clicked",
-      G_CALLBACK (reset_button_cb), plugin);
-
     //fill each page with the data for that plugin
     //so far we only do colour
+
+    PluginPageData* page_data = g_new0(PluginPageData, 1);
+
+    page_data->num_colors = plugin->num_data;
+    page_data->buttons = g_new(GtkColorButton*, page_data->num_colors);
+    page_data->plugin = plugin;
 
     int i = 0;
     while (i != plugin->num_data)
     {
-      GdkColor color = {
-        0,
-        COLOR_F_TO_16(plugin->colors[i].red), 
-        COLOR_F_TO_16(plugin->colors[i].green),
-        COLOR_F_TO_16(plugin->colors[i].blue)
-        };
 
       color_label = gtk_label_new(plugin->data_names[i]);
 
@@ -910,7 +951,8 @@ add_plugin_pages(GtkNotebook* book, ConfigDialogData* data)
         i, i + 1, 0, 1,
         0, 0, 6, 3);
 
-      color_button = gtk_color_button_new_with_color(&color);
+      color_button = gtk_color_button_new();
+      set_color_button(GTK_COLOR_BUTTON(color_button), plugin, i);
 
       g_signal_connect (G_OBJECT(color_button), "color-set",
         G_CALLBACK (color_changed_cb), &plugin->color_config[i]);
@@ -919,9 +961,18 @@ add_plugin_pages(GtkNotebook* book, ConfigDialogData* data)
         i, i + 1, 1, 2,
         0, 0, 6, 3);
 
+      page_data->buttons[i] = GTK_COLOR_BUTTON(color_button);
+
       color_label = 0;
       ++i;
     }
+
+    page_data->next = data->page_data;
+    data->page_data = page_data;
+
+    //connect the push signal for the reset button
+    g_signal_connect (G_OBJECT(reset_button), "clicked",
+      G_CALLBACK (reset_button_cb), page_data);
 
     frame = frame->nextframe;
   }
