@@ -687,6 +687,13 @@ drag_data_inserted_cb
 )
 {
   fprintf(stderr, "data inserted\n");
+
+  gchar* result;
+  gtk_tree_model_get(model, iter, 1, &result, -1);
+
+  fprintf(stderr, "%s\n", result);
+
+  g_free(result);
 }
 
 static void
@@ -699,6 +706,24 @@ drag_data_changed_cb
 )
 {
   fprintf(stderr, "data changed\n");
+
+  gchar* result;
+  gtk_tree_model_get(model, iter, 1, &result, -1);
+
+  fprintf(stderr, "%s\n", result);
+
+  g_free(result);
+}
+
+static void
+drag_data_deleted_cb
+(
+  GtkTreeModel* model,
+  GtkTreePath* path,
+  SysinfoInstance* sysinfo
+)
+{
+  fprintf(stderr, "row deleted\n");
 }
 
 static void
@@ -794,6 +819,8 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
     G_CALLBACK(&drag_data_inserted_cb), sysinfo);
   g_signal_connect(store, "row-changed", 
     G_CALLBACK(&drag_data_changed_cb), sysinfo);
+  g_signal_connect(store, "row-deleted", 
+    G_CALLBACK(&drag_data_deleted_cb), sysinfo);
 }
 
 static void
