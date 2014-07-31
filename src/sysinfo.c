@@ -686,6 +686,7 @@ drag_data_inserted_cb
   SysinfoInstance* sysinfo
 )
 {
+  fprintf(stderr, "data inserted\n");
 }
 
 static void
@@ -697,6 +698,7 @@ drag_data_changed_cb
   SysinfoInstance* sysinfo
 )
 {
+  fprintf(stderr, "data changed\n");
 }
 
 static void
@@ -788,9 +790,9 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
   gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
 
   //connect the row change signals
-  g_signal_connect(GTK_WIDGET(store), "row-inserted", 
+  g_signal_connect(store, "row-inserted", 
     G_CALLBACK(&drag_data_inserted_cb), sysinfo);
-  g_signal_connect(GTK_WIDGET(store), "row-changed", 
+  g_signal_connect(store, "row-changed", 
     G_CALLBACK(&drag_data_changed_cb), sysinfo);
 }
 
@@ -958,6 +960,8 @@ sysinfo_init(XfcePanelPlugin* plugin)
     G_CALLBACK(orientation_cb), sysinfo);
   g_signal_connect (plugin, "configure-plugin", 
     G_CALLBACK(configure_plugin), sysinfo);
+
+  //g_log_set_always_fatal(G_LOG_LEVEL_WARNING);
 
 }
 
