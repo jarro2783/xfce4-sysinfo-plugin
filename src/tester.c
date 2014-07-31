@@ -44,7 +44,8 @@ int main(int argc, char* argv[])
 
       (*p->get_data)(p, &data);
 
-      size_t j = 0;
+      //ignore background data
+      size_t j = 1;
       while (j != p->num_data)
       {
         printf("%g\t", data.data[j]);

@@ -98,7 +98,8 @@ cpu_get_data(SysinfoPlugin* plugin, SysinfoPluginData* data)
   p[CPU_IOWAIT] = (current[CPU_IOWAIT] - last[CPU_IOWAIT]) / totaldelta;
 
   //multiply to percentage and round
-  size_t i = 0;
+  //ignore background
+  size_t i = 1;
   while (i != DATA_FIELDS)
   {
     p[i] = round(p[i] * 100);
