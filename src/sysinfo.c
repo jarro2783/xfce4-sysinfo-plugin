@@ -36,6 +36,7 @@ along with xfce4-sysinfo-plugin; see the file COPYING.  If not see
 
 typedef struct sysinfoinstance SysinfoInstance;
 typedef struct framedata FrameData;
+typedef struct pluginpagedata PluginPageData;
 
 enum
 {
@@ -90,8 +91,6 @@ struct sysinfoinstance
 
   guint timeout_id;
 };
-
-typedef struct pluginpagedata PluginPageData;
 
 struct pluginpagedata
 {
@@ -343,7 +342,6 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
 {
   GtkWidget* frame = gtk_frame_new(NULL);
   GtkWidget* drawing = gtk_drawing_area_new();
-  //GtkWidget* drawing = gtk_label_new("Hello world");
 
   //we own a reference to the frame
   g_object_ref(frame);
@@ -712,14 +710,6 @@ drag_data_inserted_cb
   SysinfoInstance* sysinfo
 )
 {
-  fprintf(stderr, "data inserted\n");
-
-  gchar* result;
-  gtk_tree_model_get(model, iter, 1, &result, -1);
-
-  fprintf(stderr, "%s\n", result);
-
-  g_free(result);
 }
 
 static void
@@ -731,14 +721,45 @@ drag_data_changed_cb
   SysinfoInstance* sysinfo
 )
 {
-  fprintf(stderr, "data changed\n");
+}
 
-  gchar* result;
-  gtk_tree_model_get(model, iter, 1, &result, -1);
+static FrameData*
+frame_remove_plugin(SysinfoInstance* sysinfo, gchar* name)
+{
+  //pointer to the previous pointer
+  FrameData** previous = &sysinfo->drawn_frames;
 
-  fprintf(stderr, "%s\n", result);
+  //the current frame
+  FrameData* current = sysinfo->drawn_frames;
+  FrameData* result = 0;
 
-  g_free(result);
+  while (current != 0 && result == 0)
+  {
+    if (strcmp(name, current->plugin->plugin_name) == 0)
+    {
+      result = current;
+      //take out the current frame
+      *previous = current->nextframe;
+      current->nextframe = 0;
+    }
+    else
+    {
+      previous = &current->nextframe;
+      current = current->nextframe;
+    }
+  }
+
+  return result;
+}
+
+static void
+container_remove_child
+(
+  GtkWidget* child,
+  GtkWidget* container
+)
+{
+  gtk_container_remove(GTK_CONTAINER(container), child);
 }
 
 static void
@@ -749,7 +770,50 @@ drag_data_deleted_cb
   SysinfoInstance* sysinfo
 )
 {
-  fprintf(stderr, "row deleted\n");
+  FrameData* new_head = 0;
+  //this is the last function called, so we can work out the new order
+
+  //clear the frames
+  gtk_container_foreach(GTK_CONTAINER(sysinfo->hvbox), 
+    (GtkCallback)&container_remove_child,
+    sysinfo->hvbox);
+
+  //first build the list in the reverse order
+  GtkTreeIter iter;
+  gboolean has_next = gtk_tree_model_get_iter_first(model, &iter);
+
+  while (has_next)
+  {
+    gchar* name;
+    gtk_tree_model_get(model, &iter, 1, &name, -1);
+
+    FrameData* frame = frame_remove_plugin(sysinfo, name);
+    frame->nextframe = new_head;
+    new_head = frame;
+
+    g_free(name);
+
+    has_next = gtk_tree_model_iter_next(model, &iter);
+  }
+
+  //then reverse the list and repack the app
+  FrameData* current = new_head;
+  FrameData* next = 0;
+  new_head = 0;
+
+  while (current)
+  {
+    //pack from end into app
+    gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), current->frame, TRUE, TRUE, 0);
+
+    //reverse the list
+    next = current->nextframe;
+    current->nextframe = new_head;
+    new_head = current;
+    current = next;
+  }
+  
+  sysinfo->drawn_frames = new_head;
 }
 
 static void

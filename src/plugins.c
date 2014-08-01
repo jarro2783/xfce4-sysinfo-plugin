@@ -62,6 +62,50 @@ sysinfo_pluginlist_new()
   return list;
 }
 
+SysinfoPlugin*
+sysinfo_pluginlist_remove(SysinfoPluginList* list, gchar* name)
+{
+  //remove the first plugin whose name matches
+  SysinfoPlugin* result = 0;
+  int i = 0;
+  while (i != list->num_plugins && result == 0)
+  {
+    if (strcmp(name, list->plugins[i]->plugin_name) == 0)
+    {
+      result = list->plugins[i];
+    }
+    ++i;
+  }
+
+  //if we found something, then move everything else in the array along
+  //by one
+  if (result != 0)
+  {
+    memmove(list->plugins + i - 1, list->plugins + i, 
+      (list->num_plugins - i) * sizeof (SysinfoPlugin*));
+  }
+
+  return result;
+}
+
+SysinfoPlugin*
+sysinfo_pluginlist_get_name(SysinfoPluginList* list, gchar* name)
+{
+  //find the first plugin whose name matches
+  SysinfoPlugin* result = 0;
+  int i = 0;
+  while (i != list->num_plugins && result == 0)
+  {
+    if (strcmp(name, list->plugins[i]->plugin_name) == 0)
+    {
+      result = list->plugins[i];
+    }
+    ++i;
+  }
+
+  return result;
+}
+
 //The way this work is that we first get a list of all the files in the
 //plugins directory. Then, if it looks like a library, we try to open it.
 //If that works, we load it. The way we test if it is a library is that it

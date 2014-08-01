@@ -91,6 +91,12 @@ sysinfo_tryload_plugin(const char* file);
 SysinfoPluginList*
 sysinfo_pluginlist_new();
 
+SysinfoPlugin*
+sysinfo_pluginlist_remove(SysinfoPluginList* list, gchar* name);
+
+SysinfoPlugin*
+sysinfo_pluginlist_get_name(SysinfoPluginList* list, gchar* name);
+
 size_t
 sysinfo_pluginlist_size(SysinfoPluginList* list);
 
