@@ -381,13 +381,6 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
   fd->shown = TRUE;
 }
 
-static gboolean
-button_pressed_cb(GtkWidget* widget, GdkEvent* event, gpointer data)
-{
-  fprintf(stderr, "button pressed\n");
-  return FALSE;
-}
-
 static void
 construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
@@ -396,9 +389,6 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   sysinfo->top = gtk_event_box_new();
   gtk_event_box_set_visible_window(GTK_EVENT_BOX(sysinfo->top), FALSE);
   gtk_event_box_set_above_child(GTK_EVENT_BOX(sysinfo->top), TRUE);
-
-  g_signal_connect(sysinfo->top, "button-press-event", 
-    G_CALLBACK(&button_pressed_cb), 0);
 
   xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
 
@@ -649,6 +639,34 @@ sysinfo_free(SysinfoInstance* sysinfo)
 }
 
 static void
+save_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
+{
+  gchar* save_file = xfce_panel_plugin_save_location(plugin, TRUE);
+
+  XfceRc* rc = xfce_rc_simple_open(save_file, FALSE);
+
+  if (rc == 0)
+  {
+    return ;
+  }
+
+  int pos = 0;
+  FrameData* frame = sysinfo->drawn_frames;
+
+  while (frame != 0)
+  {
+    xfce_rc_set_group(rc, frame->plugin->plugin_name);
+
+    xfce_rc_write_int_entry(rc, "position", pos);
+
+    ++pos;
+    frame = frame->nextframe;
+  }
+
+  xfce_rc_close(rc);
+}
+
+static void
 config_response_cb(GtkWidget* dlg, gint response, ConfigDialogData* data)
 {
   //free the memory for all the plugin configs
@@ -665,6 +683,9 @@ config_response_cb(GtkWidget* dlg, gint response, ConfigDialogData* data)
   }
 
   gtk_widget_destroy(dlg);
+
+  //save configuration to file
+  save_plugin(data->sysinfo->plugin, data->sysinfo);
 
   xfce_panel_plugin_unblock_menu(data->sysinfo->plugin);
 
@@ -761,16 +782,6 @@ frame_remove_plugin(SysinfoInstance* sysinfo, gchar* name)
   }
 
   return result;
-}
-
-static void
-container_remove_child
-(
-  GtkWidget* child,
-  GtkWidget* container
-)
-{
-  gtk_container_remove(GTK_CONTAINER(container), child);
 }
 
 static void
@@ -886,7 +897,7 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
     gtk_list_store_append(store, &iter);
     gtk_list_store_set(
       store, &iter,
-      CONFIG_COL_ENABLED, TRUE,
+      CONFIG_COL_ENABLED, frame->shown,
       CONFIG_COL_NAME, frame->plugin->plugin_name,
       CONFIG_COL_FRAME_PTR, frame,
       -1
@@ -1121,6 +1132,8 @@ sysinfo_init(XfcePanelPlugin* plugin)
     G_CALLBACK(orientation_cb), sysinfo);
   g_signal_connect (plugin, "configure-plugin", 
     G_CALLBACK(configure_plugin), sysinfo);
+  g_signal_connect (plugin, "save", 
+    G_CALLBACK(save_plugin), sysinfo);
 
   //g_log_set_always_fatal(G_LOG_LEVEL_WARNING);
 
