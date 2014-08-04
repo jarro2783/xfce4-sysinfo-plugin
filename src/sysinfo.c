@@ -378,9 +378,14 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
   g_object_ref(fd->tooltip_text);
   g_signal_connect(drawing, "query-tooltip", G_CALLBACK(tooltip_cb), fd);
  
-  //xfce_panel_plugin_add_action_widget(fd->sysinfo->plugin, fd->frame);
-
   fd->shown = TRUE;
+}
+
+static gboolean
+button_pressed_cb(GtkWidget* widget, GdkEvent* event, gpointer data)
+{
+  fprintf(stderr, "button pressed\n");
+  return FALSE;
 }
 
 static void
@@ -392,11 +397,15 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   gtk_event_box_set_visible_window(GTK_EVENT_BOX(sysinfo->top), FALSE);
   gtk_event_box_set_above_child(GTK_EVENT_BOX(sysinfo->top), TRUE);
 
-  //xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
+  g_signal_connect(sysinfo->top, "button-press-event", 
+    G_CALLBACK(&button_pressed_cb), 0);
+
+  xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
 
   gtk_container_add(GTK_CONTAINER(plugin), sysinfo->top);
 
   sysinfo->hvbox = xfce_hvbox_new(orientation, FALSE, 0);
+  xfce_panel_plugin_add_action_widget(plugin, sysinfo->hvbox);
   gtk_container_add(GTK_CONTAINER(sysinfo->top), sysinfo->hvbox);
 
   //each graph is a drawing area in a frame
@@ -413,6 +422,8 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   {
     FrameData* fd = g_slice_new0(FrameData);
     SysinfoPlugin* plugin = sysinfo_pluginlist_get(sysinfo->plugin_list, i);
+
+    fd->sysinfo = sysinfo;
 
     setup_frame(GTK_BOX(sysinfo->hvbox), fd, plugin);
 
@@ -773,14 +784,11 @@ drag_data_deleted_cb
   FrameData* new_head = 0;
   //this is the last function called, so we can work out the new order
 
-  //clear the frames
-  gtk_container_foreach(GTK_CONTAINER(sysinfo->hvbox), 
-    (GtkCallback)&container_remove_child,
-    sysinfo->hvbox);
-
   //first build the list in the reverse order
   GtkTreeIter iter;
   gboolean has_next = gtk_tree_model_get_iter_first(model, &iter);
+
+  int num = 0;
 
   while (has_next)
   {
@@ -794,17 +802,28 @@ drag_data_deleted_cb
     g_free(name);
 
     has_next = gtk_tree_model_iter_next(model, &iter);
+
+    ++num;
   }
 
-  //then reverse the list and repack the app
+  //then reverse the list and reorder the widgets
   FrameData* current = new_head;
   FrameData* next = 0;
   new_head = 0;
 
+  int i = 0;
   while (current)
   {
     //pack from end into app
-    gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), current->frame, TRUE, TRUE, 0);
+    //gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), current->frame, TRUE, TRUE, 0);
+   
+    //xfce_panel_plugin_add_action_widget(current->sysinfo->plugin, 
+    //  current->frame);
+    //xfce_panel_plugin_add_action_widget(current->sysinfo->plugin, 
+    //  current->drawing);
+
+    gtk_box_reorder_child(GTK_BOX(sysinfo->hvbox), 
+      GTK_WIDGET(current->frame), num - i);
 
     //reverse the list
     next = current->nextframe;
