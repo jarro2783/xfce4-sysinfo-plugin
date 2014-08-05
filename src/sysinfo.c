@@ -639,6 +639,47 @@ sysinfo_free(SysinfoInstance* sysinfo)
 }
 
 static void
+format_one_color_string(gchar* dest, double color)
+{
+  fprintf(stderr, "Printing colour %g as %.2x\n", color, (int)(color*255));
+  snprintf(dest, 3, "%.2x", (int)(color * 255));
+}
+
+static gchar** 
+format_color_string(SysinfoColor* c)
+{
+  //write the color as a 2 digit hex
+  gchar** colors = g_new(gchar*, 4);
+  colors[3] = 0;
+
+  int i = 0;
+  while (i != 3)
+  {
+    colors[i] = g_new(gchar, 3);
+    ++i;
+  }
+
+  format_one_color_string(colors[0], c->red);
+  format_one_color_string(colors[1], c->green);
+  format_one_color_string(colors[2], c->blue);
+
+  return colors;
+}
+
+static void
+free_color_string(gchar** colors)
+{
+  int i = 0;
+  while (i != 3)
+  {
+    g_free(colors[i]);
+    ++i;
+  }
+
+  g_free(colors);
+}
+
+static void
 save_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   gchar* save_file = xfce_panel_plugin_save_location(plugin, TRUE);
@@ -659,9 +700,27 @@ save_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 
     xfce_rc_write_int_entry(rc, "position", pos);
 
+    int which_data = 0;
+    while (which_data != frame->plugin->num_data)
+    {
+      fprintf(stderr, "formitting colours for %s: %s\n", 
+        frame->plugin->plugin_name, frame->plugin->data_names[which_data]);
+      gchar** colors = format_color_string(&frame->plugin->colors[which_data]);
+      xfce_rc_write_list_entry(rc, frame->plugin->data_names[which_data],
+        colors, ",");
+
+      free_color_string(colors);
+
+      ++which_data;
+    }
+
     ++pos;
     frame = frame->nextframe;
   }
+
+  //pos will now be the number of plugins
+  xfce_rc_set_group(rc, "sysinfo");
+  xfce_rc_write_int_entry(rc, "num_plugins", pos);
 
   xfce_rc_close(rc);
 }
