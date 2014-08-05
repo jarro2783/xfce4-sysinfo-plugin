@@ -588,8 +588,6 @@ read_config(SysinfoInstance* sysinfo)
 {
   gchar* save_location = xfce_panel_plugin_lookup_rc_file(sysinfo->plugin);
 
-  fprintf(stderr, "restoring from %s\n", save_location);
-
   if (save_location == 0)
   {
     return ;
@@ -791,7 +789,6 @@ sysinfo_free(SysinfoInstance* sysinfo)
 static void
 format_one_color_string(gchar* dest, double color)
 {
-  fprintf(stderr, "Printing colour %g as %.2x\n", color, (int)(color*255));
   snprintf(dest, 3, "%.2x", (int)(color * 255));
 }
 
@@ -853,8 +850,6 @@ save_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
     int which_data = 0;
     while (which_data != frame->plugin->num_data)
     {
-      fprintf(stderr, "formitting colours for %s: %s\n", 
-        frame->plugin->plugin_name, frame->plugin->data_names[which_data]);
       gchar** colors = format_color_string(&frame->plugin->colors[which_data]);
       xfce_rc_write_list_entry(rc, frame->plugin->data_names[which_data],
         colors, ",");
