@@ -567,6 +567,22 @@ frame_remove_plugin(SysinfoInstance* sysinfo, gchar* name)
   return result;
 }
 
+static double
+read_one_color(gchar* hex)
+{
+  int result;
+  sscanf(hex, "%x", &result);
+  return result / 255.;
+}
+
+static void
+plugin_set_color(gchar** color, SysinfoPlugin* plugin, int which)
+{
+  plugin->colors[which].red = read_one_color(color[0]);
+  plugin->colors[which].green = read_one_color(color[1]);
+  plugin->colors[which].blue = read_one_color(color[2]);
+}
+
 static void
 read_config(SysinfoInstance* sysinfo)
 {
@@ -613,6 +629,19 @@ read_config(SysinfoInstance* sysinfo)
     {
       if (pos < entries)
       {
+        //read all the colors
+        int c = 0;
+        while (c != f->plugin->num_data)
+        {
+          gchar** color = xfce_rc_read_list_entry(rc, 
+            f->plugin->data_names[c], ",");
+
+          plugin_set_color(color, f->plugin, c);
+
+          g_strfreev(color);
+          ++c;
+        }
+
         frames[pos] = f;
       }
     }
@@ -635,8 +664,6 @@ read_config(SysinfoInstance* sysinfo)
   {
     FrameData* f = frames[i];
 
-    fprintf(stderr, 
-      "putting %s at position %d\n", f->plugin->plugin_name, position);
     //put the frame in its position in the hbox
     gtk_box_reorder_child(GTK_BOX(sysinfo->hvbox), f->frame, position);
 
@@ -975,29 +1002,18 @@ drag_data_deleted_cb
   FrameData* next = 0;
   new_head = 0;
 
-  int i = 0;
   while (current)
   {
-    //pack from end into app
-    //gtk_box_pack_end(GTK_BOX(sysinfo->hvbox), current->frame, TRUE, TRUE, 0);
-   
-    //xfce_panel_plugin_add_action_widget(current->sysinfo->plugin, 
-    //  current->frame);
-    //xfce_panel_plugin_add_action_widget(current->sysinfo->plugin, 
-    //  current->drawing);
-
-    //reverse the list
     next = current->nextframe;
     current->nextframe = new_head;
     new_head = current;
     current = next;
-    ++i;
   }
   
   sysinfo->drawn_frames = new_head;
 
   //go through in forward order and reorder the frames
-  i = 0;
+  int i = 0;
   current = sysinfo->drawn_frames;
   while (current)
   {
