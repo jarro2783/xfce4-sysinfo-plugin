@@ -347,7 +347,7 @@ setup_frame(GtkBox* box, FrameData* fd, SysinfoPlugin* plugin)
   g_object_ref(frame);
 
   gtk_container_add(GTK_CONTAINER(frame), drawing);
-  gtk_box_pack_end(box, frame, TRUE, TRUE, 0);
+  //gtk_box_pack_start(box, frame, TRUE, TRUE, 0);
 
   fd->frame = frame;
   fd->drawing = drawing;
@@ -424,6 +424,14 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   }
 
   sysinfo->drawn_frames = head;
+
+  //go through in forward order and pack frames
+  FrameData* current = sysinfo->drawn_frames;
+  while (current)
+  {
+    gtk_box_pack_start(GTK_BOX(sysinfo->hvbox), current->frame, TRUE, TRUE, 0);
+    current = current->nextframe;
+  }
 
   gtk_widget_show_all(sysinfo->top);
 }
@@ -530,6 +538,35 @@ update(SysinfoInstance* sysinfo)
   return TRUE;
 }
 
+static FrameData*
+frame_remove_plugin(SysinfoInstance* sysinfo, gchar* name)
+{
+  //pointer to the previous pointer
+  FrameData** previous = &sysinfo->drawn_frames;
+
+  //the current frame
+  FrameData* current = sysinfo->drawn_frames;
+  FrameData* result = 0;
+
+  while (current != 0 && result == 0)
+  {
+    if (strcmp(name, current->plugin->plugin_name) == 0)
+    {
+      result = current;
+      //take out the current frame
+      *previous = current->nextframe;
+      current->nextframe = 0;
+    }
+    else
+    {
+      previous = &current->nextframe;
+      current = current->nextframe;
+    }
+  }
+
+  return result;
+}
+
 static void
 read_config(SysinfoInstance* sysinfo)
 {
@@ -551,7 +588,70 @@ read_config(SysinfoInstance* sysinfo)
     return ;
   }
 
+  xfce_rc_set_group(rc, "sysinfo");
+
+  int entries = xfce_rc_read_int_entry(rc, "num_plugins", 0);
+
   gchar** groups = xfce_rc_get_groups(rc);
+
+  //reorder the plugins by putting them in an array and then
+  //linking them up
+  //if there are extras then they will be put at the end
+  FrameData** frames = g_new0(FrameData*, entries + 1);
+
+  int i = 0;
+  while (groups[i] != 0)
+  {
+    xfce_rc_set_group(rc, groups[i]);
+
+    int pos = xfce_rc_read_int_entry(rc, "position", 0);
+
+    FrameData* f = frame_remove_plugin(sysinfo, groups[i]);
+
+    //if it was found, put it in its place
+    if (f != 0)
+    {
+      if (pos < entries)
+      {
+        frames[pos] = f;
+      }
+    }
+
+    ++i;
+  }
+
+  //then go through the groups and reset the list
+  i = 0;
+  int position = 0;
+  while (frames[i] == 0 && i != entries)
+  {
+    //find the first non empty frame
+    ++i;
+  }
+
+  FrameData* head = frames[i];
+
+  while (i != entries)
+  {
+    FrameData* f = frames[i];
+
+    fprintf(stderr, 
+      "putting %s at position %d\n", f->plugin->plugin_name, position);
+    //put the frame in its position in the hbox
+    gtk_box_reorder_child(GTK_BOX(sysinfo->hvbox), f->frame, position);
+
+    //find the next one
+    ++i;
+    while (frames[i] == 0 && i != entries)
+    {
+      ++i;
+    }
+
+    ++position;
+    f->nextframe = frames[i];
+  }
+
+  sysinfo->drawn_frames = head;
 
   g_strfreev(groups);
 
@@ -837,35 +937,6 @@ drag_data_changed_cb
 {
 }
 
-static FrameData*
-frame_remove_plugin(SysinfoInstance* sysinfo, gchar* name)
-{
-  //pointer to the previous pointer
-  FrameData** previous = &sysinfo->drawn_frames;
-
-  //the current frame
-  FrameData* current = sysinfo->drawn_frames;
-  FrameData* result = 0;
-
-  while (current != 0 && result == 0)
-  {
-    if (strcmp(name, current->plugin->plugin_name) == 0)
-    {
-      result = current;
-      //take out the current frame
-      *previous = current->nextframe;
-      current->nextframe = 0;
-    }
-    else
-    {
-      previous = &current->nextframe;
-      current = current->nextframe;
-    }
-  }
-
-  return result;
-}
-
 static void
 drag_data_deleted_cb
 (
@@ -915,17 +986,27 @@ drag_data_deleted_cb
     //xfce_panel_plugin_add_action_widget(current->sysinfo->plugin, 
     //  current->drawing);
 
-    gtk_box_reorder_child(GTK_BOX(sysinfo->hvbox), 
-      GTK_WIDGET(current->frame), num - i);
-
     //reverse the list
     next = current->nextframe;
     current->nextframe = new_head;
     new_head = current;
     current = next;
+    ++i;
   }
   
   sysinfo->drawn_frames = new_head;
+
+  //go through in forward order and reorder the frames
+  i = 0;
+  current = sysinfo->drawn_frames;
+  while (current)
+  {
+    gtk_box_reorder_child(GTK_BOX(sysinfo->hvbox), 
+      GTK_WIDGET(current->frame), i);
+
+    current = current->nextframe;
+    ++i;
+  }
 }
 
 static void
