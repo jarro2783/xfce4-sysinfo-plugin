@@ -387,7 +387,7 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   GtkOrientation orientation = xfce_panel_plugin_get_orientation(plugin);
 
   sysinfo->top = gtk_event_box_new();
-  gtk_event_box_set_visible_window(GTK_EVENT_BOX(sysinfo->top), FALSE);
+  //gtk_event_box_set_visible_window(GTK_EVENT_BOX(sysinfo->top), FALSE);
   gtk_event_box_set_above_child(GTK_EVENT_BOX(sysinfo->top), TRUE);
 
   xfce_panel_plugin_add_action_widget(plugin, sysinfo->top);
@@ -533,6 +533,29 @@ update(SysinfoInstance* sysinfo)
 static void
 read_config(SysinfoInstance* sysinfo)
 {
+  gchar* save_location = xfce_panel_plugin_lookup_rc_file(sysinfo->plugin);
+
+  fprintf(stderr, "restoring from %s\n", save_location);
+
+  if (save_location == 0)
+  {
+    return ;
+  }
+
+  //restore the config from the file
+  XfceRc* rc = xfce_rc_simple_open(save_location, TRUE);
+
+  if (rc == 0)
+  {
+    //there was an error so we don't restore
+    return ;
+  }
+
+  gchar** groups = xfce_rc_get_groups(rc);
+
+  g_strfreev(groups);
+
+  xfce_rc_close(rc);
 }
 
 static SysinfoInstance*
