@@ -88,6 +88,8 @@ struct sysinfoinstance
 
   FrameData* drawn_frames;
 
+  int time_index;
+  int new_time_index;
   guint timeout_id;
 };
 
@@ -105,6 +107,23 @@ typedef struct
   SysinfoInstance* sysinfo;
   PluginPageData* page_data;
 } ConfigDialogData;
+
+static gchar* interval_text[] = 
+  {
+    "250ms",
+    "500ms",
+    "750ms",
+    "1000ms",
+    NULL
+  };
+
+static int interval_values[] =
+  {
+    250,
+    500,
+    750,
+    1000
+  };
 
 static inline int
 draw_one_point
@@ -530,7 +549,17 @@ update(SysinfoInstance* sysinfo)
     frame = frame->nextframe;
   }
 
-  return TRUE;
+  if (sysinfo->time_index != sysinfo->new_time_index)
+  {
+    sysinfo->time_index = sysinfo->new_time_index;
+    sysinfo->timeout_id = g_timeout_add(interval_values[sysinfo->time_index], 
+      (GSourceFunc)update, sysinfo);
+    return FALSE;
+  }
+  else
+  {
+    return TRUE;
+  }
 }
 
 static FrameData*
@@ -691,14 +720,15 @@ sysinfo_construct(XfcePanelPlugin* plugin)
 
   sysinfo->plugin_list = sysinfo_load_plugins();
 
+  sysinfo->time_index = -1;
+  sysinfo->new_time_index = 0;
+
   construct_gui(plugin, sysinfo);
 
   read_config(sysinfo);
 
   //do one update
   update(sysinfo);
-
-  sysinfo->timeout_id = g_timeout_add(250, (GSourceFunc)update, sysinfo);
 
   return sysinfo;
 }
@@ -1016,6 +1046,14 @@ drag_data_deleted_cb
 }
 
 static void
+interval_changed(GtkComboBox* box, SysinfoInstance* sysinfo)
+{
+  int which = gtk_combo_box_get_active(box);
+
+  sysinfo->new_time_index = which;
+}
+
+static void
 make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 {
   GtkWidget* update_row = gtk_hbox_new(FALSE, 0);
@@ -1028,25 +1066,19 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
 
   GtkWidget* update_intervals = gtk_combo_box_text_new();
 
-  gchar* intervals[] = 
-    {
-      "250ms",
-      "500ms",
-      "750ms",
-      "1000ms",
-      NULL
-    };
-
   int i = 0;
-  while (intervals[i])
+  while (interval_text[i])
   {
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(update_intervals), 
-      intervals[i]);
+      interval_text[i]);
     ++i;
   }
 
   gtk_box_pack_start(GTK_BOX(update_row), update_intervals, FALSE, FALSE, 0);
   gtk_combo_box_set_active(GTK_COMBO_BOX(update_intervals), 0);
+
+  g_signal_connect(update_intervals, "changed",
+    G_CALLBACK(interval_changed), sysinfo);
 
   //make the tree view
   //loop through every plugin and make an entry for it
