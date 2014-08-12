@@ -86,7 +86,6 @@ struct sysinfoinstance
   GtkWidget* top;
   GtkWidget* hvbox;
 
-  size_t num_displayed;
   FrameData* drawn_frames;
 
   guint timeout_id;
@@ -401,10 +400,6 @@ construct_gui(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   //each graph is a drawing area in a frame
   size_t num_plugins = sysinfo_pluginlist_size(sysinfo->plugin_list);
   size_t i = 0;
-
-  sysinfo->num_displayed = num_plugins;
-
-  //fprintf(stderr, "opened %zu plugins\n", num_plugins);
 
   FrameData* head = 0;
 
@@ -756,7 +751,7 @@ cleanup_frame(FrameData* f)
 }
 
 static void
-sysinfo_free(SysinfoInstance* sysinfo)
+sysinfo_free(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
 {
   //free each plugin
   size_t i = 0;

@@ -80,7 +80,7 @@ mem_close(SysinfoPlugin* plugin)
   MemData* data = (MemData*)plugin->plugin_data;
 
   g_free(data->data);
-  g_free(data->tooltip);
+  //g_free(data->tooltip);
   g_free(data);
 
   g_free(plugin->colors);
