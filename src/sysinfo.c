@@ -108,6 +108,8 @@ typedef struct
   PluginPageData* page_data;
 } ConfigDialogData;
 
+static int MAX_TIME_INDEX = 3;
+
 static gchar* interval_text[] = 
   {
     "250ms",
@@ -630,6 +632,14 @@ read_config(SysinfoInstance* sysinfo)
 
   int entries = xfce_rc_read_int_entry(rc, "num_plugins", 0);
 
+  sysinfo->new_time_index = 
+    xfce_rc_read_int_entry(rc, "update_interval", 0);
+
+  if (sysinfo->new_time_index > MAX_TIME_INDEX)
+  {
+    sysinfo->new_time_index = 0;
+  }
+
   gchar** groups = xfce_rc_get_groups(rc);
 
   //reorder the plugins by putting them in an array and then
@@ -891,6 +901,7 @@ save_plugin(XfcePanelPlugin* plugin, SysinfoInstance* sysinfo)
   //pos will now be the number of plugins
   xfce_rc_set_group(rc, "sysinfo");
   xfce_rc_write_int_entry(rc, "num_plugins", pos);
+  xfce_rc_write_int_entry(rc, "update_interval", sysinfo->time_index);
 
   xfce_rc_close(rc);
 }
@@ -1075,7 +1086,8 @@ make_sys_configuration(GtkBox* c, SysinfoInstance* sysinfo)
   }
 
   gtk_box_pack_start(GTK_BOX(update_row), update_intervals, FALSE, FALSE, 0);
-  gtk_combo_box_set_active(GTK_COMBO_BOX(update_intervals), 0);
+  gtk_combo_box_set_active(GTK_COMBO_BOX(update_intervals), 
+    sysinfo->time_index);
 
   g_signal_connect(update_intervals, "changed",
     G_CALLBACK(interval_changed), sysinfo);
